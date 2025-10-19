@@ -7,6 +7,6 @@ class AuthRepository {
   AuthRepository(this._apiService);
 
   Future<Map<String, dynamic>> login(LoginRequestModel request) async {
-    return await _apiService.post('auth/login', request.toJson());
+    return await _apiService.post('v1/auth/login', request.toJson());
   }
 }

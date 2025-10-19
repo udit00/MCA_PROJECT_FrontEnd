@@ -1,43 +1,63 @@
-
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
+import 'package:flutter/cupertino.dart';
 
 class ApiService {
-  static const String _baseUrl = 'http://194.164.148.69:5000/zymm/v1/';
+  final Dio _dio;
+
+  static const String liveUrl = 'http://194.164.148.69:5000';
+  static const String testUrl = 'http://localhost:5000';
+
+  static const String envUrl = liveUrl;
+
+  static const String _baseUrl = '$envUrl/zymm/';
+
+  ApiService() : _dio = Dio(BaseOptions(baseUrl: _baseUrl)) {
+    _dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) {
+          debugPrint('Request was -> ${options.data.toString()}');
+          return handler.next(options);
+        },
+        onError: (error, handler) {
+          if (error.response != null) {
+            debugPrint('error was -> ${error.response.toString()}');
+          } else {
+            debugPrint('error was -> ${error.message}');
+          }
+          return handler.next(error);
+        },
+        onResponse: (response, handler) {
+          debugPrint('Response was -> ${response.data.toString()}');
+          return handler.next(response);
+        },
+      ),
+    );
+    _dio.interceptors.add(
+      LogInterceptor(
+        responseBody: true,
+        requestBody: true,
+        logPrint: (o) {
+          debugPrint(o.toString());
+        },
+      ),
+    );
+  }
 
   Future<dynamic> post(String endpoint, Map<String, dynamic> data) async {
     try {
-      final response = await http.post(
-        Uri.parse('$_baseUrl$endpoint'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(data),
-      );
-      return _processResponse(response);
-    } catch (e) {
-      // Handle exceptions
+      final response = await _dio.post(endpoint, data: data);
+      return response.data;
+    } on DioException {
       rethrow;
     }
   }
 
   Future<dynamic> get(String endpoint) async {
     try {
-      final response = await http.get(Uri.parse('$_baseUrl$endpoint'));
-      return _processResponse(response);
-    } catch (e) {
-      // Handle exceptions
+      final response = await _dio.get(endpoint);
+      return response.data;
+    } on DioException {
       rethrow;
-    }
-  }
-
-  dynamic _processResponse(http.Response response) {
-    print("response ${response.body}");
-    switch (response.statusCode) {
-      case 200:
-      case 201:
-        return jsonDecode(response.body);
-      // Add other status code handling as needed
-      default:
-        throw Exception('Error occurred with status code: ${response.statusCode}');
     }
   }
 }

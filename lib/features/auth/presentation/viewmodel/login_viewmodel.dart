@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:zymm/common/models/common_api_response_model.dart';
 import 'package:zymm/core/network/api_service.dart';
 import 'package:zymm/features/auth/data/models/login_request_model.dart';
 import 'package:zymm/features/auth/data/models/login_response_model.dart';
@@ -30,12 +31,14 @@ class LoginViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final request = LoginRequestModel(
-        emailOrMobile: emailOrMobile,
-        password: password,
-      );
-      final response = await _repository.login(request);
-      _loginResponse = LoginResponseModel.fromJson(response);
+      // final request = LoginRequestModel(
+      //   emailOrMobile: emailOrMobile,
+      //   password: password,
+      // );
+      final request = LoginRequestModel(emailOrMobile: "7011490531", password: "password@123");
+      final rawResponse = await _repository.login(request);
+      CommonApiResponse apiResponse = CommonApiResponse.fromJson(rawResponse);
+      _loginResponse = LoginResponseModel.fromJson(apiResponse.data);
       _state = ViewState.success;
     } catch (e) {
       _state = ViewState.error;

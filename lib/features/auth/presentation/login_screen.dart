@@ -23,6 +23,8 @@ class _LoginScreenState extends State<LoginScreen> {
         setState(() {});
       }
     });
+    _usernameController.value = TextEditingValue(text: '7011490531');
+    _passwordController.value = TextEditingValue(text: 'password@123');
   }
 
   @override
@@ -55,7 +57,7 @@ class _LoginScreenState extends State<LoginScreen> {
         return const LoadingWidget();
       case ViewState.success:
         return Center(
-          child: Text('Login Success! Token: ${_viewModel.loginResponse?.token}'),
+          child: Text('Login Success! Token: ${_viewModel.loginResponse?.authToken}'),
         );
       case ViewState.error:
       case ViewState.idle:
