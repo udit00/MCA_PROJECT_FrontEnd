@@ -6,7 +6,7 @@ import 'package:zymm/features/home/presentation/home_screen.dart';
 class GreetingScreen extends StatefulWidget {
   final String displayName;
 
-  const GreetingScreen({Key? key, required this.displayName}) : super(key: key);
+  const GreetingScreen({super.key, required this.displayName});
 
   @override
   State<GreetingScreen> createState() => _GreetingScreenState();
@@ -26,8 +26,10 @@ class _GreetingScreenState extends State<GreetingScreen> {
 
         if (greetingVM.state == GreetingState.success) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            Navigator.of(context).pushReplacement(
+            Navigator.pushAndRemoveUntil(
+              context,
               MaterialPageRoute(builder: (context) => const HomeScreen()),
+                  (route) => false,
             );
           });
         }

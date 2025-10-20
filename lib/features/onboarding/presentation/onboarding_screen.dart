@@ -28,9 +28,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         // Navigate to HomeScreen if authenticated
         if (onboardingVM.state == AuthState.authenticated) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            Navigator.pushReplacement(
+            Navigator.pushAndRemoveUntil(
               context,
-              MaterialPageRoute(builder: (_) => const HomeScreen()),
+              MaterialPageRoute(builder: (context) => const HomeScreen()),
+                  (route) => false,
             );
           });
         }
