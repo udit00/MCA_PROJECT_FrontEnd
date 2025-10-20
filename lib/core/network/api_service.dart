@@ -1,11 +1,10 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:zymm/core/storage/storage_service.dart';
 
 class ApiService {
   final Dio _dio;
-  String? _authToken;
 
-  // Singleton setup
   static final ApiService _instance = ApiService._internal();
   factory ApiService() {
     return _instance;
@@ -16,25 +15,31 @@ class ApiService {
 
   static const String envUrl = liveUrl;
 
-  // Corrected base URL
   static const String _baseUrl = '$envUrl/zymm/v1/';
-
-  // Method to set the token
-  void setAuthToken(String? token) {
-    _authToken = token;
-  }
 
   ApiService._internal() : _dio = Dio(BaseOptions(baseUrl: _baseUrl)) {
     _dio.interceptors.add(
       InterceptorsWrapper(
-        onRequest: (options, handler) {
-          debugPrint('Request was -> ${options.data.toString()}');
-          // Add auth token to header if available
-          if (_authToken != null) {
-            options.headers['Authorization'] = 'Bearer $_authToken';
+        onRequest: (options, handler) async {
+          final token = await StorageService.instance.getAuthToken();
+          if (token != null && token.isNotEmpty) {
+            options.headers['Authorization'] = 'Bearer $token';
           }
-          return handler.next(options);
+          debugPrint('➡️ Request: ${options.method} ${options.uri}');
+          debugPrint('Headers: ${options.headers}');
+          if(options.data != null) {
+            debugPrint('Body: ${options.data}');
+          }
+          handler.next(options);
         },
+        // onRequest: (options, handler) {
+        //   debugPrint('Request was -> ${options.data.toString()}');
+        //   // Add auth token to header if available
+        //   if (_authToken?.isNotEmpty == true) {
+        //     options.headers['Authorization'] = 'Bearer $_authToken';
+        //   }
+        //   return handler.next(options);
+        // },
         onError: (error, handler) {
           if (error.response != null) {
             debugPrint('error was -> ${error.response.toString()}');

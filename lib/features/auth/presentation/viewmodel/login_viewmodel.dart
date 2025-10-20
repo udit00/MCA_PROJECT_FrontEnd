@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:zymm/core/network/api_service.dart';
+import 'package:zymm/core/storage/storage_service.dart';
 import 'package:zymm/features/auth/data/models/login_request_model.dart';
 import 'package:zymm/features/auth/data/models/login_response_model.dart';
 import 'package:zymm/features/auth/data/repositories/auth_repository_impl.dart';
@@ -17,6 +17,8 @@ class LoginViewModel extends ChangeNotifier {
 
   LoginResponseModel? _loginResponse;
   LoginResponseModel? get loginResponse => _loginResponse;
+
+
 
   Future<void> login(String emailOrMobile, String password) async {
     if (emailOrMobile.isEmpty || password.isEmpty) {
@@ -41,8 +43,9 @@ class LoginViewModel extends ChangeNotifier {
         _errorMessage = response.error ?? 'An unknown error occurred';
       } else {
         _loginResponse = LoginResponseModel.fromJson(response.data);
-        // Set auth token for subsequent API calls
-        ApiService().setAuthToken(_loginResponse?.authToken);
+        if(_loginResponse?.authToken?.isNotEmpty == true) {
+          StorageService.instance.saveAuthToken(_loginResponse!.authToken!);
+        }
         _state = ViewState.success;
       }
     } catch (e) {

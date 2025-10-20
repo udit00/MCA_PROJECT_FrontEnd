@@ -17,6 +17,5 @@ class CommonApiResponse {
     );
   }
 
-  /// Returns true if the response has an error or the status code is not in the 2xx range.
   bool get hasError => error != null || (status < 200 || status >= 300);
 }

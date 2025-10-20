@@ -14,7 +14,9 @@ class GreetingViewModel extends ChangeNotifier {
 
   Future<void> fetchSelfData() async {
     _state = GreetingState.loading;
-    notifyListeners();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      notifyListeners();
+    });
 
     try {
       final response = await _repository.getSelfData();
