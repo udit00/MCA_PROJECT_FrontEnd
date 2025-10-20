@@ -25,7 +25,9 @@ class _GreetingScreenState extends State<GreetingScreen> {
       builder: (context, greetingVM, child) {
 
         if (greetingVM.state == GreetingState.success) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
+          WidgetsBinding.instance.addPostFrameCallback((_) async {
+            await Future.delayed(const Duration(seconds: 2)); // 👈 Wait 2 seconds
+            if (!mounted) return; // Safety check
             Navigator.pushAndRemoveUntil(
               context,
               MaterialPageRoute(builder: (context) => const HomeScreen()),
@@ -35,19 +37,31 @@ class _GreetingScreenState extends State<GreetingScreen> {
         }
 
         return Scaffold(
+          appBar: AppBar(
+            centerTitle: true,
+            title: const Text('Zymm'),
+
+          ),
           body: Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text('Welcome, ${widget.displayName}'),
                 const SizedBox(height: 20),
-                if (greetingVM.state == GreetingState.loading)
-                  const CircularProgressIndicator(),
-                if (greetingVM.state == GreetingState.error)
+                if (greetingVM.state != GreetingState.error) const CircularProgressIndicator(),
+                if (greetingVM.state == GreetingState.error) ... [
                   Text(
                     greetingVM.errorMessage ?? 'An error occurred.',
                     style: const TextStyle(color: Colors.red),
                   ),
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    child: Text("Retry"),
+                    onPressed: () {
+                      greetingVM.fetchSelfData();
+                    },
+                  )
+                ]
               ],
             ),
           ),
