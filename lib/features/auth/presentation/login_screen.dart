@@ -17,8 +17,6 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
-    _usernameController.text = '7011490531';
-    _passwordController.text = 'password@123';
   }
 
   @override
@@ -48,46 +46,49 @@ class _LoginScreenState extends State<LoginScreen> {
             title: const Text('Login'),
           ),
           body: SafeArea(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextFormField(
-                    controller: _usernameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Username',
-                      border: OutlineInputBorder(),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 50, horizontal: 8),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextFormField(
+                      controller: _usernameController,
+                      decoration: const InputDecoration(
+                        labelText: 'Username',
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (value) => value == null || value.isEmpty ? 'Enter username' : null,
                     ),
-                    validator: (value) => value == null || value.isEmpty ? 'Enter username' : null,
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _passwordController,
-                    decoration: const InputDecoration(
-                      labelText: 'Password',
-                      border: OutlineInputBorder(),
+                    const SizedBox(height: 40),
+                    TextFormField(
+                      controller: _passwordController,
+                      decoration: const InputDecoration(
+                        labelText: 'Password',
+                        border: OutlineInputBorder(),
+                      ),
+                      obscureText: true,
+                      validator: (value) => value == null || value.isEmpty ? 'Enter password' : null,
                     ),
-                    obscureText: true,
-                    validator: (value) => value == null || value.isEmpty ? 'Enter password' : null,
-                  ),
-                  const SizedBox(height: 24),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        loginVM.login(_usernameController.text, _passwordController.text);
-                      },
-                      child: const Text('Submit'),
-                    ),
-                  ),
-                  if (loginVM.state == ViewState.error)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 16.0),
-                      child: Text(
-                        loginVM.errorMessage ?? 'An error occurred',
-                        style: const TextStyle(color: Colors.red),
+                    const SizedBox(height: 44),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          loginVM.login(_usernameController.text, _passwordController.text);
+                        },
+                        child: const Text('Submit'),
                       ),
                     ),
-                ],
+                    if (loginVM.state == ViewState.error)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 16.0),
+                        child: Text(
+                          loginVM.errorMessage ?? 'An error occurred',
+                          style: const TextStyle(color: Colors.red),
+                        ),
+                      ),
+                  ],
+                ),
               ),
           )
         );

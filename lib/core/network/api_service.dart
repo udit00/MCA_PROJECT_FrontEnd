@@ -22,7 +22,7 @@ class ApiService {
       InterceptorsWrapper(
         onRequest: (options, handler) async {
           final token = await StorageService.instance.getAuthToken();
-          if (token != null && token.isNotEmpty) {
+          if (token?.isNotEmpty == true) {
             options.headers['Authorization'] = 'Bearer $token';
           }
           debugPrint('➡️ Request: ${options.method} ${options.uri}');
@@ -32,14 +32,6 @@ class ApiService {
           }
           handler.next(options);
         },
-        // onRequest: (options, handler) {
-        //   debugPrint('Request was -> ${options.data.toString()}');
-        //   // Add auth token to header if available
-        //   if (_authToken?.isNotEmpty == true) {
-        //     options.headers['Authorization'] = 'Bearer $_authToken';
-        //   }
-        //   return handler.next(options);
-        // },
         onError: (error, handler) {
           if (error.response != null) {
             debugPrint('error was -> ${error.response.toString()}');
@@ -69,8 +61,8 @@ class ApiService {
     try {
       final response = await _dio.post(endpoint, data: data);
       return response.data;
-    } on DioException {
-      rethrow;
+    } on DioException catch (e) {
+      return e.response?.data;
     }
   }
 
@@ -78,8 +70,8 @@ class ApiService {
     try {
       final response = await _dio.get(endpoint);
       return response.data;
-    } on DioException {
-      rethrow;
+    } on DioException catch (e) {
+      return e.response?.data;
     }
   }
 }
