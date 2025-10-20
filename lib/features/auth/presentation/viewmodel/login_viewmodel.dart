@@ -37,16 +37,27 @@ class LoginViewModel extends ChangeNotifier {
         password: password,
       );
       final response = await _repository.login(request);
-
       if (response.hasError) {
         _state = ViewState.error;
         _errorMessage = response.error ?? 'An unknown error occurred';
       } else {
         _loginResponse = LoginResponseModel.fromJson(response.data);
-        if(_loginResponse?.authToken?.isNotEmpty == true) {
+        if(_loginResponse != null && _loginResponse?.authToken?.isNotEmpty == true && _loginResponse?.displayName?.isNotEmpty == true) {
           StorageService.instance.saveAuthToken(_loginResponse!.authToken!);
+          StorageService.instance.saveDisplayName(_loginResponse!.displayName!);
+          _state = ViewState.success;
+        } else {
+          if(_loginResponse == null) {
+            _errorMessage = 'Something went wrong with our server, please try again later.';
+          } else if(_loginResponse?.authToken?.isEmpty == true) {
+            _errorMessage = 'Error generating Auth Token, please try again later.';
+          } else if(_loginResponse?.displayName?.isEmpty == true) {
+            _errorMessage = 'Error while trying to log you in, please try again later.';
+          } else {
+            _errorMessage = 'An unknown error occurred';
+          }
+          _state = ViewState.error;
         }
-        _state = ViewState.success;
       }
     } catch (e) {
       _state = ViewState.error;

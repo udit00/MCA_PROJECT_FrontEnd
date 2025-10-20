@@ -22,11 +22,14 @@ class OnboardingViewModel extends ChangeNotifier {
   }
 
   Future<void> logout() async {
-    await _storageService.clearAuthToken();
+    await _storageService.clearAllOnLogout();
     _state = AuthState.unauthenticated;
     notifyListeners();
   }
 
-
+  void resetStateToNotAuthenticated() {
+    _state = AuthState.unauthenticated;
+    notifyListeners();
+  }
 
 }

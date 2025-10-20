@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:zymm/core/storage/storage_service.dart';
 import 'package:zymm/features/auth/presentation/widgets/loading_widget.dart';
+import 'package:zymm/features/home/presentation/greeting_screen.dart';
 import 'package:zymm/features/onboarding/presentation/viewmodel/onboarding_viewmodel.dart';
 
 import '../../auth/presentation/login_screen.dart';
-import '../../home/presentation/home_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -27,12 +28,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       builder: (context, onboardingVM, child) {
         // Navigate to HomeScreen if authenticated
         if (onboardingVM.state == AuthState.authenticated) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(builder: (context) => const HomeScreen()),
-                  (route) => false,
-            );
+          WidgetsBinding.instance.addPostFrameCallback((_) async {
+            String? displayNameFromStorage = await StorageService.instance.getDisplayName();
+            if(displayNameFromStorage?.isNotEmpty == true) {
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) =>
+                    GreetingScreen(displayName: displayNameFromStorage!)),
+                    (route) => false,
+              );
+            } else {
+              onboardingVM.resetStateToNotAuthenticated();
+            }
           });
         }
 
