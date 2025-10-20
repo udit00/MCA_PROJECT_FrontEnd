@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:zymm/common/models/common_api_response_model.dart';
 import 'package:zymm/core/network/api_service.dart';
 import 'package:zymm/features/auth/data/models/login_request_model.dart';
 import 'package:zymm/features/auth/data/models/login_response_model.dart';
@@ -8,7 +7,7 @@ import 'package:zymm/features/auth/data/repositories/auth_repository_impl.dart';
 enum ViewState { idle, loading, success, error }
 
 class LoginViewModel extends ChangeNotifier {
-  final AuthRepository _repository = AuthRepository(ApiService());
+  final AuthRepository _repository = AuthRepository();
 
   ViewState _state = ViewState.idle;
   ViewState get state => _state;
@@ -31,15 +30,21 @@ class LoginViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // final request = LoginRequestModel(
-      //   emailOrMobile: emailOrMobile,
-      //   password: password,
-      // );
-      final request = LoginRequestModel(emailOrMobile: "7011490531", password: "password@123");
-      final rawResponse = await _repository.login(request);
-      CommonApiResponse apiResponse = CommonApiResponse.fromJson(rawResponse);
-      _loginResponse = LoginResponseModel.fromJson(apiResponse.data);
-      _state = ViewState.success;
+      final request = LoginRequestModel(
+        emailOrMobile: emailOrMobile,
+        password: password,
+      );
+      final response = await _repository.login(request);
+
+      if (response.hasError) {
+        _state = ViewState.error;
+        _errorMessage = response.error ?? 'An unknown error occurred';
+      } else {
+        _loginResponse = LoginResponseModel.fromJson(response.data);
+        // Set auth token for subsequent API calls
+        ApiService().setAuthToken(_loginResponse?.authToken);
+        _state = ViewState.success;
+      }
     } catch (e) {
       _state = ViewState.error;
       _errorMessage = e.toString();

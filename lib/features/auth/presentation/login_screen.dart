@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:zymm/features/home/presentation/greeting_screen.dart';
 import 'package:zymm/features/auth/presentation/viewmodel/login_viewmodel.dart';
 import 'package:zymm/features/auth/presentation/widgets/loading_widget.dart';
 
@@ -18,21 +19,33 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
-    _viewModel.addListener(() {
-      if (mounted) {
-        setState(() {});
-      }
-    });
-    _usernameController.value = TextEditingValue(text: '7011490531');
-    _passwordController.value = TextEditingValue(text: 'password@123');
+    _viewModel.addListener(_handleStateChange);
+    _usernameController.text = '7011490531';
+    _passwordController.text = 'password@123';
   }
 
   @override
   void dispose() {
+    _viewModel.removeListener(_handleStateChange);
     _viewModel.dispose();
     _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  void _handleStateChange() {
+    if (_viewModel.state == ViewState.success) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (context) => GreetingScreen(
+            displayName: _viewModel.loginResponse?.displayName ?? 'User',
+          ),
+        ),
+      );
+    } else {
+      // Rebuild the widget to show loading or error states
+      setState(() {});
+    }
   }
 
   void _submit() {
@@ -52,18 +65,10 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Widget _buildBody() {
-    switch (_viewModel.state) {
-      case ViewState.loading:
-        return const LoadingWidget();
-      case ViewState.success:
-        return Center(
-          child: Text('Login Success! Token: ${_viewModel.loginResponse?.authToken}'),
-        );
-      case ViewState.error:
-      case ViewState.idle:
-      default:
-        return _buildLoginForm();
+    if (_viewModel.state == ViewState.loading) {
+      return const LoadingWidget();
     }
+    return _buildLoginForm();
   }
 
   Widget _buildLoginForm() {

@@ -1,12 +1,12 @@
+import 'package:zymm/common/models/common_api_response_model.dart';
 import 'package:zymm/core/network/api_service.dart';
 import 'package:zymm/features/auth/data/models/login_request_model.dart';
 
 class AuthRepository {
-  final ApiService _apiService;
+  final ApiService _apiService = ApiService();
 
-  AuthRepository(this._apiService);
-
-  Future<Map<String, dynamic>> login(LoginRequestModel request) async {
-    return await _apiService.post('v1/auth/login', request.toJson());
+  Future<CommonApiResponse> login(LoginRequestModel request) async {
+    final response = await _apiService.post('auth/login', request.toJson());
+    return CommonApiResponse.fromJson(response);
   }
 }

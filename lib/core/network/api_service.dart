@@ -3,19 +3,36 @@ import 'package:flutter/cupertino.dart';
 
 class ApiService {
   final Dio _dio;
+  String? _authToken;
+
+  // Singleton setup
+  static final ApiService _instance = ApiService._internal();
+  factory ApiService() {
+    return _instance;
+  }
 
   static const String liveUrl = 'http://194.164.148.69:5000';
   static const String testUrl = 'http://localhost:5000';
 
   static const String envUrl = liveUrl;
 
-  static const String _baseUrl = '$envUrl/zymm/';
+  // Corrected base URL
+  static const String _baseUrl = '$envUrl/zymm/v1/';
 
-  ApiService() : _dio = Dio(BaseOptions(baseUrl: _baseUrl)) {
+  // Method to set the token
+  void setAuthToken(String? token) {
+    _authToken = token;
+  }
+
+  ApiService._internal() : _dio = Dio(BaseOptions(baseUrl: _baseUrl)) {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) {
           debugPrint('Request was -> ${options.data.toString()}');
+          // Add auth token to header if available
+          if (_authToken != null) {
+            options.headers['Authorization'] = 'Bearer $_authToken';
+          }
           return handler.next(options);
         },
         onError: (error, handler) {
