@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:zymm/core/storage/storage_service.dart';
+import 'package:zymm/features/auth/presentation/registration_screen.dart';
 import 'package:zymm/features/auth/presentation/widgets/loading_widget.dart';
 import 'package:zymm/features/home/presentation/greeting_screen.dart';
 import 'package:zymm/features/onboarding/presentation/viewmodel/onboarding_viewmodel.dart';
@@ -54,15 +55,58 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             // });
           case AuthState.unauthenticated:
               return Scaffold(
-                body: SafeArea(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 40),
-                          child: ElevatedButton(
+                body: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Theme.of(context).primaryColor.withValues(alpha: 0.8),
+                        Theme.of(context).primaryColor,
+                        Theme.of(context).colorScheme.secondary,
+                      ],
+                    ),
+                  ),
+                  child: SafeArea(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 32),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const Spacer(flex: 2),
+                          // App Logo/Icon
+                          Icon(
+                            Icons.fitness_center,
+                            size: 100,
+                            color: Colors.white,
+                          ),
+                          const SizedBox(height: 24),
+                          // App Name
+                          Text(
+                            'ZYMM',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 48,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                              letterSpacing: 4,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          // Tagline
+                          Text(
+                            'Your Fitness Journey Starts Here',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.white.withValues(alpha: 0.9),
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                          const Spacer(flex: 3),
+                          // Login Button
+                          ElevatedButton(
                             onPressed: () {
                               Navigator.push(
                                 context,
@@ -70,20 +114,51 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                     builder: (context) => const LoginScreen()),
                               );
                             },
-                            child: const Text("Login"),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              foregroundColor: Theme.of(context).primaryColor,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              elevation: 8,
+                            ),
+                            child: const Text(
+                              'Login',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 20),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 40),
-                          child: ElevatedButton(
+                          const SizedBox(height: 16),
+                          // Register Button
+                          OutlinedButton(
                             onPressed: () {
-                              // Navigate to Registration
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => RegistrationScreen())
+                              );
                             },
-                            child: const Text("Register"),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              side: const BorderSide(color: Colors.white, width: 2),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: const Text(
+                              'Register',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
-                        ),
-                      ],
+                          const Spacer(flex: 2),
+                        ],
+                      ),
                     ),
                   ),
                 ),
