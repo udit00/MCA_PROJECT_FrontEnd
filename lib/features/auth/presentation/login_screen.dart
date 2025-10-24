@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:zymm/features/home/presentation/greeting_screen.dart';
 import 'package:zymm/features/auth/presentation/viewmodel/login_viewmodel.dart';
@@ -41,14 +42,17 @@ class _LoginScreenState extends State<LoginScreen> {
             );
           });
         }
-        return Scaffold(
-          backgroundColor: Colors.grey[50],
-          appBar: AppBar(
-            title: const Text('Login'),
-            elevation: 0,
-            backgroundColor: Colors.transparent,
-            foregroundColor: Theme.of(context).primaryColor,
+        return AnnotatedRegion<SystemUiOverlayStyle>(
+          value: const SystemUiOverlayStyle(
+            statusBarColor: Colors.transparent,
+            statusBarIconBrightness: Brightness.dark,
+            statusBarBrightness: Brightness.light,
           ),
+          child: Scaffold(
+            backgroundColor: Colors.grey[50],
+            appBar: AppBar(
+              title: const Text('Login'),
+            ),
           body: SafeArea(
             child: SingleChildScrollView(
               child: Padding(
@@ -217,6 +221,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
             ),
+          ),
           )
         );
       }
