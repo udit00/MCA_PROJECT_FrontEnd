@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:zymm/core/location/location_service.dart';
 import 'package:zymm/features/home/presentation/greeting_screen.dart';
 import 'package:zymm/features/auth/presentation/viewmodel/owner_registration_viewmodel.dart';
 import 'package:zymm/features/auth/presentation/registration_screen.dart';
@@ -14,14 +15,14 @@ class OwnerRegistrationScreen extends StatefulWidget {
 class _OwnerRegistrationScreenState extends State<OwnerRegistrationScreen> {
   final _formKey = GlobalKey<FormState>();
   
-  // Personal Details Controllers
+  // Personal details
   final _displayNameController = TextEditingController();
   final _mobileController = TextEditingController();
-  final _personalEmailController = TextEditingController();
+  final _ownerEmailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   
-  // Gym Details Controllers
+  // Gym details
   final _gymNameController = TextEditingController();
   final _stateController = TextEditingController();
   final _cityController = TextEditingController();
@@ -29,15 +30,17 @@ class _OwnerRegistrationScreenState extends State<OwnerRegistrationScreen> {
   final _gymContactController = TextEditingController();
   final _gymEmailController = TextEditingController();
   
-  String _selectedGender = 'Male';
+  String _selectedGender = 'M';
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
+  LocationData? _gymLocation;
+  bool _isLoadingLocation = false;
 
   @override
   void dispose() {
     _displayNameController.dispose();
     _mobileController.dispose();
-    _personalEmailController.dispose();
+    _ownerEmailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     _gymNameController.dispose();
@@ -49,18 +52,41 @@ class _OwnerRegistrationScreenState extends State<OwnerRegistrationScreen> {
     super.dispose();
   }
 
+  Future<void> _fetchGymLocation() async {
+    setState(() {
+      _isLoadingLocation = true;
+    });
+
+    final location = await LocationService.instance.getLocationWithErrorHandling(context);
+    
+    setState(() {
+      _gymLocation = location;
+      _isLoadingLocation = false;
+    });
+
+    if (location != null && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Gym location captured successfully!'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (_) => OwnerRegistrationViewModel(),
       child: Consumer<OwnerRegistrationViewModel>(
-        builder: (context, ownerRegistrationVM, child) {
-          if (ownerRegistrationVM.state == ViewState.success) {
+        builder: (context, ownerRegVM, child) {
+          if (ownerRegVM.state == ViewState.success) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               Navigator.of(context).pushReplacement(
                 MaterialPageRoute(
                   builder: (context) => GreetingScreen(
-                    displayName: ownerRegistrationVM.registrationResponse?.displayName ?? 'Owner',
+                    displayName: ownerRegVM.registrationResponse?.displayName ?? 'Owner',
                   ),
                 ),
               );
@@ -74,20 +100,23 @@ class _OwnerRegistrationScreenState extends State<OwnerRegistrationScreen> {
             ),
             body: SafeArea(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+                padding: const EdgeInsets.all(16),
                 child: Form(
                   key: _formKey,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // "I'm a member" text at top
+                      // Switch to Member Registration
                       Align(
                         alignment: Alignment.centerRight,
                         child: TextButton.icon(
                           onPressed: () {
                             Navigator.of(context).pushReplacement(
                               MaterialPageRoute(
-                                builder: (context) => const RegistrationScreen(),
+                                builder: (context) => ChangeNotifierProvider(
+                                  create: (_) => OwnerRegistrationViewModel(),
+                                  child: const RegistrationScreen(),
+                                ),
                               ),
                             );
                           },
@@ -102,8 +131,9 @@ class _OwnerRegistrationScreenState extends State<OwnerRegistrationScreen> {
                         ),
                       ),
                       const SizedBox(height: 8),
+
                       const Text(
-                        'Create Owner Account',
+                        'Register Your Gym',
                         style: TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.bold,
@@ -111,100 +141,65 @@ class _OwnerRegistrationScreenState extends State<OwnerRegistrationScreen> {
                       ),
                       const SizedBox(height: 8),
                       const Text(
-                        'Register your gym and become an owner',
+                        'Please fill in your personal and gym details',
                         style: TextStyle(
                           fontSize: 16,
                           color: Colors.grey,
                         ),
                       ),
-                      const SizedBox(height: 32),
-                      
-                      // Personal Details Section
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.blue.shade50,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Row(
-                          children: [
-                            Icon(Icons.person, color: Colors.blue),
-                            SizedBox(width: 8),
-                            Text(
-                              'Personal Details',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.blue,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                      const SizedBox(height: 24),
+
+                      // PERSONAL DETAILS SECTION
+                      _buildSectionHeader('Personal Details'),
                       const SizedBox(height: 16),
-                      
-                      // Display Name Field
+
                       TextFormField(
                         controller: _displayNameController,
                         decoration: const InputDecoration(
                           labelText: 'Full Name *',
-                          hintText: 'Enter your full name',
+                          hintText: 'Enter your name',
                           border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.person_outline),
+                          prefixIcon: Icon(Icons.person),
                         ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter your name';
-                          }
-                          return null;
-                        },
+                        validator: (value) => value?.isEmpty ?? true ? 'Please enter your name' : null,
                       ),
                       const SizedBox(height: 16),
 
-                      // Mobile Number Field
                       TextFormField(
                         controller: _mobileController,
                         decoration: const InputDecoration(
                           labelText: 'Mobile Number *',
-                          hintText: 'Enter your mobile number',
+                          hintText: 'Enter your mobile',
                           border: OutlineInputBorder(),
                           prefixIcon: Icon(Icons.phone),
                         ),
                         keyboardType: TextInputType.phone,
                         validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter your mobile number';
-                          }
-                          if (value.length < 10) {
-                            return 'Please enter a valid mobile number';
-                          }
+                          if (value?.isEmpty ?? true) return 'Please enter mobile number';
+                          if (value!.length < 10) return 'Enter valid mobile number';
                           return null;
                         },
                       ),
                       const SizedBox(height: 16),
 
-                      // Personal Email Field (Optional)
                       TextFormField(
-                        controller: _personalEmailController,
+                        controller: _ownerEmailController,
                         decoration: const InputDecoration(
                           labelText: 'Personal Email (Optional)',
-                          hintText: 'Enter your personal email',
+                          hintText: 'Enter your email',
                           border: OutlineInputBorder(),
                           prefixIcon: Icon(Icons.email),
                         ),
                         keyboardType: TextInputType.emailAddress,
                         validator: (value) {
                           if (value != null && value.isNotEmpty) {
-                            if (!value.contains('@') || !value.contains('.')) {
-                              return 'Please enter a valid email';
-                            }
+                            if (!value.contains('@')) return 'Enter valid email';
                           }
                           return null;
                         },
                       ),
                       const SizedBox(height: 16),
 
-                      // Gender Dropdown
                       DropdownButtonFormField<String>(
                         initialValue: _selectedGender,
                         decoration: const InputDecoration(
@@ -212,109 +207,61 @@ class _OwnerRegistrationScreenState extends State<OwnerRegistrationScreen> {
                           border: OutlineInputBorder(),
                           prefixIcon: Icon(Icons.person_outline),
                         ),
-                        items: ['Male', 'Female', 'Other'].map((String gender) {
-                          return DropdownMenuItem<String>(
-                            value: gender,
-                            child: Text(gender),
-                          );
-                        }).toList(),
-                        onChanged: (String? newValue) {
-                          setState(() {
-                            _selectedGender = newValue!;
-                          });
-                        },
+                        items: const [
+                          DropdownMenuItem(value: 'M', child: Text('Male')),
+                          DropdownMenuItem(value: 'F', child: Text('Female')),
+                          DropdownMenuItem(value: 'O', child: Text('Other')),
+                        ],
+                        onChanged: (value) => setState(() => _selectedGender = value!),
                       ),
                       const SizedBox(height: 16),
 
-                      // Password Field
                       TextFormField(
                         controller: _passwordController,
                         decoration: InputDecoration(
                           labelText: 'Password *',
-                          hintText: 'Enter your password',
+                          hintText: 'Create password',
                           border: const OutlineInputBorder(),
                           prefixIcon: const Icon(Icons.lock),
                           suffixIcon: IconButton(
-                            icon: Icon(
-                              _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                            ),
-                            onPressed: () {
-                              setState(() {
-                                _obscurePassword = !_obscurePassword;
-                              });
-                            },
+                            icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),
+                            onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                           ),
                         ),
                         obscureText: _obscurePassword,
                         validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter a password';
-                          }
-                          if (value.length < 6) {
-                            return 'Password must be at least 6 characters';
-                          }
+                          if (value?.isEmpty ?? true) return 'Please enter password';
+                          if (value!.length < 6) return 'Password must be 6+ characters';
                           return null;
                         },
                       ),
                       const SizedBox(height: 16),
 
-                      // Confirm Password Field
                       TextFormField(
                         controller: _confirmPasswordController,
                         decoration: InputDecoration(
                           labelText: 'Confirm Password *',
-                          hintText: 'Re-enter your password',
+                          hintText: 'Re-enter password',
                           border: const OutlineInputBorder(),
                           prefixIcon: const Icon(Icons.lock_outline),
                           suffixIcon: IconButton(
-                            icon: Icon(
-                              _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
-                            ),
-                            onPressed: () {
-                              setState(() {
-                                _obscureConfirmPassword = !_obscureConfirmPassword;
-                              });
-                            },
+                            icon: Icon(_obscureConfirmPassword ? Icons.visibility_off : Icons.visibility),
+                            onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
                           ),
                         ),
                         obscureText: _obscureConfirmPassword,
                         validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please confirm your password';
-                          }
-                          if (value != _passwordController.text) {
-                            return 'Passwords do not match';
-                          }
+                          if (value?.isEmpty ?? true) return 'Please confirm password';
+                          if (value != _passwordController.text) return 'Passwords do not match';
                           return null;
                         },
                       ),
                       const SizedBox(height: 32),
 
-                      // Gym Details Section
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.green.shade50,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Row(
-                          children: [
-                            Icon(Icons.business, color: Colors.green),
-                            SizedBox(width: 8),
-                            Text(
-                              'Gym Details',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.green,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                      // GYM DETAILS SECTION
+                      _buildSectionHeader('Gym Details'),
                       const SizedBox(height: 16),
 
-                      // Gym Name Field
                       TextFormField(
                         controller: _gymNameController,
                         decoration: const InputDecoration(
@@ -323,52 +270,39 @@ class _OwnerRegistrationScreenState extends State<OwnerRegistrationScreen> {
                           border: OutlineInputBorder(),
                           prefixIcon: Icon(Icons.fitness_center),
                         ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter gym name';
-                          }
-                          return null;
-                        },
+                        validator: (value) => value?.isEmpty ?? true ? 'Please enter gym name' : null,
                       ),
                       const SizedBox(height: 16),
 
-                      // State Field
-                      TextFormField(
-                        controller: _stateController,
-                        decoration: const InputDecoration(
-                          labelText: 'State *',
-                          hintText: 'Enter state',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.location_city),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter state';
-                          }
-                          return null;
-                        },
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextFormField(
+                              controller: _stateController,
+                              decoration: const InputDecoration(
+                                labelText: 'State *',
+                                border: OutlineInputBorder(),
+                                prefixIcon: Icon(Icons.map),
+                              ),
+                              validator: (value) => value?.isEmpty ?? true ? 'Required' : null,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: TextFormField(
+                              controller: _cityController,
+                              decoration: const InputDecoration(
+                                labelText: 'City *',
+                                border: OutlineInputBorder(),
+                                prefixIcon: Icon(Icons.location_city),
+                              ),
+                              validator: (value) => value?.isEmpty ?? true ? 'Required' : null,
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 16),
 
-                      // City Field
-                      TextFormField(
-                        controller: _cityController,
-                        decoration: const InputDecoration(
-                          labelText: 'City *',
-                          hintText: 'Enter city',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.location_on),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter city';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Gym Address Field
                       TextFormField(
                         controller: _gymAddressController,
                         decoration: const InputDecoration(
@@ -377,57 +311,102 @@ class _OwnerRegistrationScreenState extends State<OwnerRegistrationScreen> {
                           border: OutlineInputBorder(),
                           prefixIcon: Icon(Icons.home),
                         ),
-                        maxLines: 3,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter gym address';
-                          }
-                          return null;
-                        },
+                        maxLines: 2,
+                        validator: (value) => value?.isEmpty ?? true ? 'Please enter gym address' : null,
                       ),
                       const SizedBox(height: 16),
 
-                      // Gym Contact Number Field
                       TextFormField(
                         controller: _gymContactController,
                         decoration: const InputDecoration(
                           labelText: 'Gym Contact Number *',
-                          hintText: 'Enter gym contact number',
+                          hintText: 'Enter gym contact',
                           border: OutlineInputBorder(),
                           prefixIcon: Icon(Icons.phone_in_talk),
                         ),
                         keyboardType: TextInputType.phone,
                         validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter gym contact number';
-                          }
-                          if (value.length < 10) {
-                            return 'Please enter a valid contact number';
-                          }
+                          if (value?.isEmpty ?? true) return 'Please enter gym contact';
+                          if (value!.length < 10) return 'Enter valid contact number';
                           return null;
                         },
                       ),
                       const SizedBox(height: 16),
 
-                      // Gym Official Email Field
                       TextFormField(
                         controller: _gymEmailController,
                         decoration: const InputDecoration(
                           labelText: 'Gym Official Email *',
-                          hintText: 'Enter gym official email',
+                          hintText: 'Enter gym email',
                           border: OutlineInputBorder(),
                           prefixIcon: Icon(Icons.email_outlined),
                         ),
                         keyboardType: TextInputType.emailAddress,
                         validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter gym official email';
-                          }
-                          if (!value.contains('@') || !value.contains('.')) {
-                            return 'Please enter a valid email';
-                          }
+                          if (value?.isEmpty ?? true) return 'Please enter gym email';
+                          if (!value!.contains('@')) return 'Enter valid email';
                           return null;
                         },
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Gym Location
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey.shade300),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(Icons.location_on, color: Colors.red),
+                                const SizedBox(width: 8),
+                                const Text(
+                                  'Gym Location *',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const Spacer(),
+                                if (_gymLocation != null)
+                                  const Icon(Icons.check_circle, color: Colors.green),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            if (_gymLocation != null)
+                              Text(
+                                'Lat: ${_gymLocation!.latitude}\nLong: ${_gymLocation!.longitude}',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey.shade600,
+                                ),
+                              )
+                            else
+                              const Text(
+                                'Location not captured yet',
+                                style: TextStyle(fontSize: 12, color: Colors.grey),
+                              ),
+                            const SizedBox(height: 12),
+                            SizedBox(
+                              width: double.infinity,
+                              child: OutlinedButton.icon(
+                                onPressed: _isLoadingLocation ? null : _fetchGymLocation,
+                                icon: _isLoadingLocation
+                                    ? const SizedBox(
+                                        height: 16,
+                                        width: 16,
+                                        child: CircularProgressIndicator(strokeWidth: 2),
+                                      )
+                                    : const Icon(Icons.my_location),
+                                label: Text(_gymLocation != null ? 'Update Location' : 'Capture Location'),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                       const SizedBox(height: 24),
 
@@ -436,17 +415,27 @@ class _OwnerRegistrationScreenState extends State<OwnerRegistrationScreen> {
                         width: double.infinity,
                         height: 50,
                         child: ElevatedButton(
-                          onPressed: ownerRegistrationVM.state == ViewState.loading
+                          onPressed: ownerRegVM.state == ViewState.loading
                               ? null
-                              : () {
+                              : () async {
                                   if (_formKey.currentState!.validate()) {
-                                    ownerRegistrationVM.registerOwner(
+                                    if (_gymLocation == null) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                          content: Text('Please capture gym location'),
+                                          backgroundColor: Colors.red,
+                                        ),
+                                      );
+                                      return;
+                                    }
+
+                                    ownerRegVM.registerOwner(
                                       displayName: _displayNameController.text.trim(),
                                       mobile: _mobileController.text.trim(),
                                       password: _passwordController.text,
                                       gender: _selectedGender,
-                                      ownerPersonalEmail: _personalEmailController.text.trim().isNotEmpty 
-                                          ? _personalEmailController.text.trim() 
+                                      ownerPersonalEmail: _ownerEmailController.text.trim().isNotEmpty
+                                          ? _ownerEmailController.text.trim()
                                           : null,
                                       gymName: _gymNameController.text.trim(),
                                       state: _stateController.text.trim(),
@@ -454,10 +443,12 @@ class _OwnerRegistrationScreenState extends State<OwnerRegistrationScreen> {
                                       gymAddress: _gymAddressController.text.trim(),
                                       gymOfficialContactNo: _gymContactController.text.trim(),
                                       gymOfficialEmail: _gymEmailController.text.trim(),
+                                      gymOfficialLocationLat: _gymLocation!.latitude,
+                                      gymOfficialLocationLong: _gymLocation!.longitude,
                                     );
                                   }
                                 },
-                          child: ownerRegistrationVM.state == ViewState.loading
+                          child: ownerRegVM.state == ViewState.loading
                               ? const CircularProgressIndicator(color: Colors.white)
                               : const Text(
                                   'Register as Owner',
@@ -467,9 +458,9 @@ class _OwnerRegistrationScreenState extends State<OwnerRegistrationScreen> {
                       ),
 
                       // Error Message
-                      if (ownerRegistrationVM.state == ViewState.error)
+                      if (ownerRegVM.state == ViewState.error)
                         Padding(
-                          padding: const EdgeInsets.only(top: 16.0),
+                          padding: const EdgeInsets.only(top: 16),
                           child: Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
@@ -483,7 +474,7 @@ class _OwnerRegistrationScreenState extends State<OwnerRegistrationScreen> {
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
-                                    ownerRegistrationVM.errorMessage ?? 'An error occurred',
+                                    ownerRegVM.errorMessage ?? 'An error occurred',
                                     style: TextStyle(color: Colors.red.shade700),
                                   ),
                                 ),
@@ -497,9 +488,7 @@ class _OwnerRegistrationScreenState extends State<OwnerRegistrationScreen> {
                       // Already have account
                       Center(
                         child: TextButton(
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          },
+                          onPressed: () => Navigator.of(context).pop(),
                           child: const Text('Already have an account? Login'),
                         ),
                       ),
@@ -513,6 +502,35 @@ class _OwnerRegistrationScreenState extends State<OwnerRegistrationScreen> {
       ),
     );
   }
+
+  Widget _buildSectionHeader(String title) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+      decoration: BoxDecoration(
+        color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 4,
+            height: 20,
+            decoration: BoxDecoration(
+              color: Theme.of(context).primaryColor,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context).primaryColor,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
-
-

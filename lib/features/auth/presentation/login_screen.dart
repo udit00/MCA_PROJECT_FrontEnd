@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:zymm/core/location/location_service.dart';
 import 'package:zymm/features/home/presentation/greeting_screen.dart';
 import 'package:zymm/features/auth/presentation/viewmodel/login_viewmodel.dart';
 
@@ -161,8 +162,18 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: ElevatedButton(
                         onPressed: loginVM.state == ViewState.loading
                             ? null
-                            : () {
-                                loginVM.login(_usernameController.text, _passwordController.text);
+                            : () async {
+                                // Get user location - required for login
+                                final location = await LocationService.instance.getLocationWithErrorHandling(context);
+                                
+                                if (location != null && mounted) {
+                                  loginVM.login(
+                                    _usernameController.text,
+                                    _passwordController.text,
+                                    locationLat: location.latitude,
+                                    locationLong: location.longitude,
+                                  );
+                                }
                               },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.transparent,

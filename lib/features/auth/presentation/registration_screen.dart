@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:zymm/core/location/location_service.dart';
 import 'package:zymm/features/home/presentation/greeting_screen.dart';
 import 'package:zymm/features/auth/presentation/viewmodel/registration_viewmodel.dart';
 import 'package:zymm/features/auth/presentation/owner_registration_screen.dart';
@@ -19,7 +20,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   
-  String _selectedGender = 'Male';
+  String _selectedGender = 'M';
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
 
@@ -171,12 +172,11 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                         border: OutlineInputBorder(),
                         prefixIcon: Icon(Icons.person_outline),
                       ),
-                      items: ['Male', 'Female', 'Other'].map((String gender) {
-                        return DropdownMenuItem<String>(
-                          value: gender,
-                          child: Text(gender),
-                        );
-                      }).toList(),
+                      items: const [
+                        DropdownMenuItem(value: 'M', child: Text('Male')),
+                        DropdownMenuItem(value: 'F', child: Text('Female')),
+                        DropdownMenuItem(value: 'O', child: Text('Other')),
+                      ],
                       onChanged: (String? newValue) {
                         setState(() {
                           _selectedGender = newValue!;
@@ -256,17 +256,24 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                       child: ElevatedButton(
                         onPressed: registrationVM.state == ViewState.loading
                             ? null
-                            : () {
+                            : () async {
                                 if (_formKey.currentState!.validate()) {
-                                  registrationVM.register(
-                                    displayName: _displayNameController.text.trim(),
-                                    mobile: _mobileController.text.trim(),
-                                    password: _passwordController.text,
-                                    gender: _selectedGender,
-                                    email: _emailController.text.trim().isNotEmpty 
-                                        ? _emailController.text.trim() 
-                                        : null,
-                                  );
+                                  // Get user location - required for registration
+                                  final location = await LocationService.instance.getLocationWithErrorHandling(context);
+                                  
+                                  if (location != null && mounted) {
+                                    registrationVM.register(
+                                      displayName: _displayNameController.text.trim(),
+                                      mobile: _mobileController.text.trim(),
+                                      password: _passwordController.text,
+                                      gender: _selectedGender,
+                                      email: _emailController.text.trim().isNotEmpty 
+                                          ? _emailController.text.trim() 
+                                          : null,
+                                      locationLat: location.latitude,
+                                      locationLong: location.longitude,
+                                    );
+                                  }
                                 }
                               },
                         child: registrationVM.state == ViewState.loading

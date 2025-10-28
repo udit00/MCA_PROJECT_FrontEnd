@@ -4,6 +4,8 @@ import 'package:zymm/features/auth/data/models/login_request_model.dart';
 import 'package:zymm/features/auth/data/models/login_response_model.dart';
 import 'package:zymm/features/auth/data/repositories/auth_repository_impl.dart';
 
+import '../../../../core/network/network_info.dart';
+
 enum ViewState { idle, loading, success, error }
 
 class LoginViewModel extends ChangeNotifier {
@@ -20,7 +22,7 @@ class LoginViewModel extends ChangeNotifier {
 
 
 
-  Future<void> login(String emailOrMobile, String password) async {
+  Future<void> login(String emailOrMobile, String password, {String locationLat = "", String locationLong = ""}) async {
     if (emailOrMobile.isEmpty || password.isEmpty) {
       _state = ViewState.error;
       _errorMessage = 'Please enter both username and password.';
@@ -35,6 +37,9 @@ class LoginViewModel extends ChangeNotifier {
       final request = LoginRequestModel(
         emailOrMobile: emailOrMobile,
         password: password,
+        locationLat: locationLat,
+        locationLong: locationLong,
+        ipAddress: await NetworkInfo.getLocalIpAddress(),
       );
       final response = await _repository.login(request);
       if (response.hasError) {

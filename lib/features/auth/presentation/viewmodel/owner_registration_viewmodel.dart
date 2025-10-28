@@ -4,6 +4,8 @@ import 'package:zymm/features/auth/data/models/owner_registration_request_model.
 import 'package:zymm/features/auth/data/models/registration_response_model.dart';
 import 'package:zymm/features/auth/data/repositories/auth_repository_impl.dart';
 
+import '../../../../core/network/network_info.dart';
+
 enum ViewState { idle, loading, success, error }
 
 class OwnerRegistrationViewModel extends ChangeNotifier {
@@ -30,6 +32,8 @@ class OwnerRegistrationViewModel extends ChangeNotifier {
     required String gymAddress,
     required String gymOfficialContactNo,
     required String gymOfficialEmail,
+    required String gymOfficialLocationLat,
+    required String gymOfficialLocationLong,
   }) async {
     // Validation
     if (displayName.isEmpty ||
@@ -56,15 +60,7 @@ class OwnerRegistrationViewModel extends ChangeNotifier {
       return;
     }
 
-    // Validate password length
-    if (password.length < 6) {
-      _state = ViewState.error;
-      _errorMessage = 'Password must be at least 6 characters long.';
-      notifyListeners();
-      return;
-    }
-
-    // Validate gym official contact
+    // Validate gym contact number
     if (gymOfficialContactNo.length < 10) {
       _state = ViewState.error;
       _errorMessage = 'Please enter a valid gym contact number.';
@@ -72,7 +68,15 @@ class OwnerRegistrationViewModel extends ChangeNotifier {
       return;
     }
 
-    // Validate gym official email
+    // Validate password
+    if (password.length < 6) {
+      _state = ViewState.error;
+      _errorMessage = 'Password must be at least 6 characters long.';
+      notifyListeners();
+      return;
+    }
+
+    // Validate email
     if (!gymOfficialEmail.contains('@') || !gymOfficialEmail.contains('.')) {
       _state = ViewState.error;
       _errorMessage = 'Please enter a valid gym official email.';
@@ -96,6 +100,9 @@ class OwnerRegistrationViewModel extends ChangeNotifier {
         gymAddress: gymAddress,
         gymOfficialContactNo: gymOfficialContactNo,
         gymOfficialEmail: gymOfficialEmail,
+        gymOfficialLocationLat: gymOfficialLocationLat,
+        gymOfficialLocationLong: gymOfficialLocationLong,
+        ipAddress: await NetworkInfo.getLocalIpAddress(),
       );
 
       final response = await _repository.registerOwner(request);
@@ -105,7 +112,7 @@ class OwnerRegistrationViewModel extends ChangeNotifier {
         _errorMessage = response.error ?? 'An unknown error occurred';
       } else {
         _registrationResponse = RegistrationResponseModel.fromJson(response.data);
-        
+
         if (_registrationResponse != null &&
             _registrationResponse?.authToken?.isNotEmpty == true &&
             _registrationResponse?.displayName?.isNotEmpty == true) {
@@ -133,5 +140,3 @@ class OwnerRegistrationViewModel extends ChangeNotifier {
     }
   }
 }
-
-

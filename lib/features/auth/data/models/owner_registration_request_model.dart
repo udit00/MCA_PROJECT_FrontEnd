@@ -1,3 +1,4 @@
+
 class OwnerRegistrationRequestModel {
   final String displayName;
   final String mobile;
@@ -40,12 +41,12 @@ class OwnerRegistrationRequestModel {
   });
 
   Map<String, dynamic> toJson() => {
+        "displayPic": displayPic,
         "displayName": displayName,
         "mobile": mobile,
+        "ownerPersonalEmail": ownerPersonalEmail,
         "password": password,
         "gender": gender,
-        "ownerPersonalEmail": ownerPersonalEmail,
-        "displayPic": displayPic,
         "appVersion": appVersion,
         "userAgent": userAgent,
         "ipAddress": ipAddress,
@@ -59,5 +60,3 @@ class OwnerRegistrationRequestModel {
         "gymOfficialLocationLong": gymOfficialLocationLong,
       };
 }
-
-

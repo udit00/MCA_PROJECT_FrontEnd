@@ -11,13 +11,18 @@ class ApiService {
   }
 
   static const String liveUrl = 'http://194.164.148.69:5000';
-  static const String testUrl = 'http://localhost:5000';
+  static const String testUrl = 'http://10.0.3.2:5000';  // Use 10.0.3.2 for Genymotion Emulator (or use 192.168.0.100 if this doesn't work)
 
-  static const String envUrl = liveUrl;
+  static const String envUrl = testUrl;
 
   static const String _baseUrl = '$envUrl/zymm/v1/';
 
-  ApiService._internal() : _dio = Dio(BaseOptions(baseUrl: _baseUrl)) {
+  ApiService._internal() : _dio = Dio(BaseOptions(
+    baseUrl: _baseUrl,
+    connectTimeout: const Duration(seconds: 10),
+    receiveTimeout: const Duration(seconds: 10),
+    sendTimeout: const Duration(seconds: 10),
+  )) {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
@@ -62,7 +67,11 @@ class ApiService {
       final response = await _dio.post(endpoint, data: data);
       return response.data;
     } on DioException catch (e) {
-      return e.response?.data;
+      if (e.response != null && e.response?.data != null) {
+        return e.response?.data;
+      } else {
+        rethrow;
+      }
     }
   }
 
@@ -71,7 +80,11 @@ class ApiService {
       final response = await _dio.get(endpoint);
       return response.data;
     } on DioException catch (e) {
-      return e.response?.data;
+      if (e.response != null && e.response?.data != null) {
+        return e.response?.data;
+      } else {
+        rethrow;
+      }
     }
   }
 }
