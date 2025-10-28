@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:zymm/features/attendance/presentation/viewmodel/attendance_viewmodel.dart';
 import 'package:zymm/features/auth/presentation/viewmodel/owner_registration_viewmodel.dart';
 import 'package:zymm/features/auth/presentation/viewmodel/registration_viewmodel.dart';
 import 'package:zymm/features/onboarding/presentation/onboarding_screen.dart';
@@ -26,6 +27,7 @@ class MyApp extends StatelessWidget {
           ChangeNotifierProvider(create: (_) => GreetingViewModel()),
           ChangeNotifierProvider(create: (_) => RegistrationViewModel()),
           ChangeNotifierProvider(create: (_) => OwnerRegistrationViewModel()),
+          ChangeNotifierProvider(create: (_) => AttendanceViewModel()),
         ],
         child: MaterialApp(
           title: 'Flutter Demo',
