@@ -2,14 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:zymm/common/enums/user_role.dart';
+import 'package:zymm/core/storage/storage_service.dart';
 import 'package:zymm/features/attendance/presentation/attendance_screen.dart';
 import 'package:zymm/features/attendance/presentation/viewmodel/attendance_viewmodel.dart';
 import 'package:zymm/features/gym/presentation/screens/search_gyms_screen.dart';
 import 'package:zymm/features/membership/presentation/screens/membership_requests_screen.dart';
+import 'package:zymm/features/membership/presentation/screens/view_all_plans_screen.dart';
 import 'package:zymm/features/membership/presentation/viewmodel/membership_viewmodel.dart';
 import 'package:zymm/features/notifications/presentation/notification_center.dart';
 import 'package:zymm/features/notifications/presentation/viewmodel/notification_viewmodel.dart';
 import 'package:zymm/features/user/presentation/screens/profile_screen.dart';
+
+import '../../gym/presentation/viewmodel/gym_viewmodel.dart';
 
 class HomeScreen extends StatelessWidget {
   final UserRole userRole;
@@ -347,7 +351,28 @@ class HomeScreen extends StatelessWidget {
             'title': 'Manage Plans',
             'subtitle': 'Membership plans',
             'color': Colors.teal,
-            'onTap': () {}, // TODO: Navigate to plans
+            'onTap': () async {
+              final gymId = await StorageService.instance.getGymId();
+              if (gymId != null && context.mounted) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        ChangeNotifierProvider(
+                          create: (_) => MembershipViewModel(),
+                          child: ViewAllPlansScreen(gymId: gymId),
+                        ),
+                  ),
+                );
+              } else if (context.mounted){
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Gym ID not found. Please try again.'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            },
           },
           {
             'icon': Icons.attach_money,
@@ -523,7 +548,10 @@ class HomeScreen extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const SearchGymsScreen(),
+                  builder: (context) => ChangeNotifierProvider(
+                    create: (_) => GymViewModel(),
+                    child: const SearchGymsScreen(),
+                  ),
                 ),
               );
             },

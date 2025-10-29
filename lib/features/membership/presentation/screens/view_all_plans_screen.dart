@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:zymm/common/enums/user_role.dart';
+import 'package:zymm/core/storage/storage_service.dart';
 import 'package:zymm/features/membership/data/models/plan_model.dart';
+import 'package:zymm/features/membership/presentation/screens/upsert_plan_screen.dart';
 import 'package:zymm/features/membership/presentation/viewmodel/membership_viewmodel.dart';
 
 class ViewAllPlansScreen extends StatefulWidget {
@@ -18,18 +21,35 @@ class ViewAllPlansScreen extends StatefulWidget {
 }
 
 class _ViewAllPlansScreenState extends State<ViewAllPlansScreen> {
+  UserRole _userRole = UserRole.member;
+
   @override
   void initState() {
     super.initState();
+    _loadUserRole();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadData();
     });
   }
 
+  Future<void> _loadUserRole() async {
+    final roleId = await StorageService.instance.getRoleId();
+    if (roleId != null && mounted) {
+      setState(() {
+        _userRole = UserRole.fromId(roleId);
+      });
+    }
+  }
+
+  bool get _isOwnerOrManager =>
+      _userRole == UserRole.owner || _userRole == UserRole.manager;
+
   Future<void> _loadData() async {
     final viewModel = context.read<MembershipViewModel>();
-    // First check if user has pending request
-    await viewModel.getPlanHistory();
+    // Only check pending requests for members
+    if (!_isOwnerOrManager) {
+      await viewModel.getPlanHistory();
+    }
     // Then load plans
     await viewModel.getAllPlansByGymId(widget.gymId);
   }
@@ -113,16 +133,26 @@ class _ViewAllPlansScreenState extends State<ViewAllPlansScreen> {
               itemCount: activePlans.length,
               itemBuilder: (context, index) {
                 final plan = activePlans[index];
-                final hasRequested = viewModel.hasRequestedPlan(plan.planId);
                 
-                return PlanCard(
-                  plan: plan,
-                  hasRequested: hasRequested,
-                  onRequest: hasRequested ? null : () => _showRequestConfirmation(plan),
-                  onCancel: hasRequested && viewModel.pendingPlanRequest != null
-                      ? () => _cancelRequest(viewModel.pendingPlanRequest!.membershipId)
-                      : null,
-                );
+                if (_isOwnerOrManager) {
+                  // Owner/Manager view - can edit plans
+                  return PlanCard(
+                    plan: plan,
+                    isOwnerOrManager: true,
+                    onEdit: () => _navigateToEditPlan(plan.planId),
+                  );
+                } else {
+                  // Member view - can request plans
+                  final hasRequested = viewModel.hasRequestedPlan(plan.planId);
+                  return PlanCard(
+                    plan: plan,
+                    hasRequested: hasRequested,
+                    onRequest: hasRequested ? null : () => _showRequestConfirmation(plan),
+                    onCancel: hasRequested && viewModel.pendingPlanRequest != null
+                        ? () => _cancelRequest(viewModel.pendingPlanRequest!.membershipId)
+                        : null,
+                  );
+                }
               },
             ),
           );
@@ -130,6 +160,16 @@ class _ViewAllPlansScreenState extends State<ViewAllPlansScreen> {
       ),
       floatingActionButton: Consumer<MembershipViewModel>(
         builder: (context, viewModel, child) {
+          // Owner/Manager: Show add plan FAB
+          if (_isOwnerOrManager) {
+            return FloatingActionButton(
+              onPressed: () => _navigateToCreatePlan(),
+              backgroundColor: Colors.green,
+              child: const Icon(Icons.add, color: Colors.white),
+            );
+          }
+          
+          // Member: Show cancel request FAB if has pending request
           if (viewModel.hasPendingRequest && viewModel.pendingPlanRequest != null) {
             return FloatingActionButton.extended(
               onPressed: () => _cancelRequest(viewModel.pendingPlanRequest!.membershipId),
@@ -268,6 +308,36 @@ class _ViewAllPlansScreenState extends State<ViewAllPlansScreen> {
       );
     }
   }
+
+  void _navigateToCreatePlan() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ChangeNotifierProvider(
+          create: (_) => MembershipViewModel(),
+          child: UpsertPlanScreen(
+            gymId: widget.gymId,
+            planId: 0, // 0 for creating new plan
+          ),
+        ),
+      ),
+    ).then((_) => _loadData()); // Reload plans after returning
+  }
+
+  void _navigateToEditPlan(int planId) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ChangeNotifierProvider(
+          create: (_) => MembershipViewModel(),
+          child: UpsertPlanScreen(
+            gymId: widget.gymId,
+            planId: planId, // Existing plan ID for editing
+          ),
+        ),
+      ),
+    ).then((_) => _loadData()); // Reload plans after returning
+  }
 }
 
 class PlanCard extends StatelessWidget {
@@ -275,13 +345,17 @@ class PlanCard extends StatelessWidget {
   final bool hasRequested;
   final VoidCallback? onRequest;
   final VoidCallback? onCancel;
+  final bool isOwnerOrManager;
+  final VoidCallback? onEdit;
 
   const PlanCard({
     super.key,
     required this.plan,
-    required this.hasRequested,
+    this.hasRequested = false,
     this.onRequest,
     this.onCancel,
+    this.isOwnerOrManager = false,
+    this.onEdit,
   });
 
   @override
@@ -378,8 +452,33 @@ class PlanCard extends StatelessWidget {
               ),
               const SizedBox(height: 16),
 
-              // Request or Cancel Button
-              if (hasRequested)
+              // Action Button based on role
+              if (isOwnerOrManager)
+                // Owner/Manager: Edit Plan Button
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: onEdit,
+                    icon: const Icon(Icons.edit, color: Colors.white),
+                    label: const Text(
+                      'Edit Plan',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                )
+              else if (hasRequested)
+                // Member: Show pending status and cancel button
                 Column(
                   children: [
                     Container(
@@ -432,6 +531,7 @@ class PlanCard extends StatelessWidget {
                   ],
                 )
               else
+                // Member: Request Plan Button
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
