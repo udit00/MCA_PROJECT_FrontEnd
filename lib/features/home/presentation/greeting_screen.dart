@@ -41,7 +41,12 @@ class _GreetingScreenState extends State<GreetingScreen> {
             Navigator.pushAndRemoveUntil(
               context,
               MaterialPageRoute(
-                builder: (context) => HomeScreen(userRole: greetingVM.userRole),
+                builder: (context) => MultiProvider(
+                  providers: [
+                    ChangeNotifierProvider(create: (_) => NotificationViewModel()..fetchNotifications()),
+                  ],
+                  child: HomeScreen(userRole: greetingVM.userRole),
+                ),
               ),
               (route) => false,
             );

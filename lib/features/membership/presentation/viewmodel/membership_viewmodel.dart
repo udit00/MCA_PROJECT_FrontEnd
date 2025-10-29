@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:zymm/features/membership/data/models/membership_model.dart';
 import 'package:zymm/features/membership/data/models/membership_request_model.dart';
 import 'package:zymm/features/membership/data/models/plan_history_model.dart';
 import 'package:zymm/features/membership/data/models/plan_model.dart';
@@ -22,8 +23,8 @@ class MembershipViewModel extends ChangeNotifier {
   PlanModel? _currentPlan;
   PlanModel? get currentPlan => _currentPlan;
 
-  List<MembershipRequestModel> _membershipRequests = [];
-  List<MembershipRequestModel> get membershipRequests => _membershipRequests;
+  List<MembershipModel> _memberships = [];
+  List<MembershipModel> get memberships => _memberships;
 
   PlanHistoryModel? _pendingPlanRequest;
   PlanHistoryModel? get pendingPlanRequest => _pendingPlanRequest;
@@ -155,34 +156,27 @@ class MembershipViewModel extends ChangeNotifier {
     }
   }
 
-  /// Get all membership requests for a gym
-  Future<void> getAllMembershipRequests(int gymId) async {
+  /// Get all memberships by filter (backend handles filtering)
+  /// filterBy: P (Pending), A (Approved), R (Rejected), ALL (All)
+  Future<void> getAllMemberships(String filterBy) async {
     _state = MembershipViewState.loading;
     _errorMessage = null;
     notifyListeners();
 
     try {
-      final response = await _repository.getAllMembershipRequests(gymId);
+      final response = await _repository.getAllMemberships(filterBy);
 
       if (response.hasError) {
-        final errorMsg = response.error?.toLowerCase() ?? '';
-        if (errorMsg.contains('no') && (errorMsg.contains('data') || errorMsg.contains('request') || errorMsg.contains('found'))) {
-          _membershipRequests = [];
-          _state = MembershipViewState.success;
-        } else {
-          _state = MembershipViewState.error;
-          _errorMessage = response.error ?? 'Failed to fetch membership requests';
-        }
+        _state = MembershipViewState.error;
+        _errorMessage = response.error ?? 'Failed to fetch memberships';
       } else {
-        if (response.data == null) {
-          _membershipRequests = [];
-        } else if (response.data is List) {
+        if (response.data is List) {
           final List<dynamic> data = response.data as List<dynamic>;
-          _membershipRequests = data.map((json) => MembershipRequestModel.fromJson(json)).toList();
-          // Sort by requested date, newest first
-          _membershipRequests.sort((a, b) => b.requestedOn.compareTo(a.requestedOn));
+          _memberships = data.map((json) => MembershipModel.fromJson(json)).toList();
+          // Sort by created date, newest first
+          _memberships.sort((a, b) => b.createdAt.compareTo(a.createdAt));
         } else {
-          _membershipRequests = [];
+          _memberships = [];
         }
         _state = MembershipViewState.success;
       }
@@ -211,10 +205,10 @@ class MembershipViewModel extends ChangeNotifier {
         notifyListeners();
         return false;
       } else {
-        // Update local request status
-        final index = _membershipRequests.indexWhere((r) => r.membershipId == membershipId);
+        // Update local membership status
+        final index = _memberships.indexWhere((m) => m.membershipId == membershipId);
         if (index != -1) {
-          // Remove from pending list or refresh
+          // Remove from list or update status
           // We'll refresh the list after action
         }
         _state = MembershipViewState.success;
@@ -262,17 +256,8 @@ class MembershipViewModel extends ChangeNotifier {
     }
   }
 
-  /// Get pending requests
-  List<MembershipRequestModel> get pendingRequests =>
-      _membershipRequests.where((r) => r.isPending).toList();
-
-  /// Get approved requests
-  List<MembershipRequestModel> get approvedRequests =>
-      _membershipRequests.where((r) => r.isApproved).toList();
-
-  /// Get rejected requests
-  List<MembershipRequestModel> get rejectedRequests =>
-      _membershipRequests.where((r) => r.isRejected).toList();
+  /// Get all memberships (backend already filters based on filterBy parameter)
+  List<MembershipModel> get allMemberships => _memberships;
 
   /// Get active plans
   List<PlanModel> get activePlans =>

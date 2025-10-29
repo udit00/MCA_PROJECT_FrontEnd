@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import 'package:zymm/features/membership/data/models/membership_request_model.dart';
+import 'package:zymm/features/membership/data/models/membership_model.dart';
+import 'package:zymm/features/membership/presentation/screens/membership_request_detail_screen.dart';
 import 'package:zymm/features/membership/presentation/viewmodel/membership_viewmodel.dart';
 
 class MembershipRequestsScreen extends StatefulWidget {
-  final int gymId;
-
-  const MembershipRequestsScreen({super.key, required this.gymId});
+  const MembershipRequestsScreen({super.key});
 
   @override
   State<MembershipRequestsScreen> createState() => _MembershipRequestsScreenState();
@@ -16,18 +15,40 @@ class MembershipRequestsScreen extends StatefulWidget {
 class _MembershipRequestsScreenState extends State<MembershipRequestsScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  String _currentFilter = 'P'; // Default to Pending
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _tabController.addListener(_handleTabChange);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<MembershipViewModel>().getAllMembershipRequests(widget.gymId);
+      context.read<MembershipViewModel>().getAllMemberships(_currentFilter);
     });
+  }
+
+  void _handleTabChange() {
+    if (!_tabController.indexIsChanging) return;
+    
+    setState(() {
+      switch (_tabController.index) {
+        case 0:
+          _currentFilter = 'P'; // Pending
+          break;
+        case 1:
+          _currentFilter = 'A'; // Approved
+          break;
+        case 2:
+          _currentFilter = 'R'; // Rejected
+          break;
+      }
+    });
+    context.read<MembershipViewModel>().getAllMemberships(_currentFilter);
   }
 
   @override
   void dispose() {
+    _tabController.removeListener(_handleTabChange);
     _tabController.dispose();
     super.dispose();
   }
@@ -68,7 +89,7 @@ class _MembershipRequestsScreenState extends State<MembershipRequestsScreen>
                   ),
                   const SizedBox(height: 16),
                   ElevatedButton.icon(
-                    onPressed: () => viewModel.getAllMembershipRequests(widget.gymId),
+                    onPressed: () => viewModel.getAllMemberships(_currentFilter),
                     icon: const Icon(Icons.refresh),
                     label: const Text('Retry'),
                   ),
@@ -78,13 +99,13 @@ class _MembershipRequestsScreenState extends State<MembershipRequestsScreen>
           }
 
           return RefreshIndicator(
-            onRefresh: () => viewModel.getAllMembershipRequests(widget.gymId),
+            onRefresh: () => viewModel.getAllMemberships(_currentFilter),
             child: TabBarView(
               controller: _tabController,
               children: [
-                _buildRequestsList(viewModel.pendingRequests, 'pending'),
-                _buildRequestsList(viewModel.approvedRequests, 'approved'),
-                _buildRequestsList(viewModel.rejectedRequests, 'rejected'),
+                _buildMembershipsList(viewModel.allMemberships, 'pending'),
+                _buildMembershipsList(viewModel.allMemberships, 'approved'),
+                _buildMembershipsList(viewModel.allMemberships, 'rejected'),
               ],
             ),
           );
@@ -93,8 +114,8 @@ class _MembershipRequestsScreenState extends State<MembershipRequestsScreen>
     );
   }
 
-  Widget _buildRequestsList(List<MembershipRequestModel> requests, String type) {
-    if (requests.isEmpty) {
+  Widget _buildMembershipsList(List<MembershipModel> memberships, String type) {
+    if (memberships.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -106,7 +127,7 @@ class _MembershipRequestsScreenState extends State<MembershipRequestsScreen>
             ),
             const SizedBox(height: 16),
             Text(
-              'No $type requests',
+              'No $type memberships',
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.grey.shade600,
@@ -119,334 +140,160 @@ class _MembershipRequestsScreenState extends State<MembershipRequestsScreen>
 
     return ListView.builder(
       padding: const EdgeInsets.all(16),
-      itemCount: requests.length,
+      itemCount: memberships.length,
       itemBuilder: (context, index) {
-        final request = requests[index];
-        return MembershipRequestCard(
-          request: request,
-          onApprove: request.isPending
-              ? () => _approveRequest(request.membershipId)
-              : null,
-          onReject: request.isPending
-              ? () => _rejectRequest(request.membershipId)
-              : null,
-        );
-      },
-    );
-  }
-
-  Future<void> _approveRequest(int membershipId) async {
-    // Show confirmation dialog
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          title: const Text('Approve Request'),
-          content: const Text('Are you sure you want to approve this membership request?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.of(dialogContext).pop(true),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
+        final membership = memberships[index];
+        return MembershipCard(
+          membership: membership,
+          onTap: () async {
+            final result = await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ChangeNotifierProvider(
+                  create: (_) => MembershipViewModel(),
+                  child: MembershipRequestDetailScreen(membership: membership),
+                ),
               ),
-              child: const Text('Approve', style: TextStyle(color: Colors.white)),
-            ),
-          ],
+            );
+            // Refresh list if action was taken
+            if (result == true && mounted) {
+              context.read<MembershipViewModel>().getAllMemberships(_currentFilter);
+            }
+          },
         );
       },
     );
-
-    if (confirmed != true) return;
-
-    final viewModel = context.read<MembershipViewModel>();
-    final success = await viewModel.approveMembershipRequest(membershipId);
-
-    if (!mounted) return;
-
-    if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Request approved successfully!'),
-          backgroundColor: Colors.green,
-        ),
-      );
-      // Refresh the list
-      viewModel.getAllMembershipRequests(widget.gymId);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(viewModel.errorMessage ?? 'Failed to approve request'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
   }
 
-  Future<void> _rejectRequest(int membershipId) async {
-    // Show confirmation dialog
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          title: const Text('Reject Request'),
-          content: const Text('Are you sure you want to reject this membership request?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.of(dialogContext).pop(true),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-              ),
-              child: const Text('Reject', style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (confirmed != true) return;
-
-    final viewModel = context.read<MembershipViewModel>();
-    final success = await viewModel.rejectMembershipRequest(membershipId);
-
-    if (!mounted) return;
-
-    if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Request rejected'),
-          backgroundColor: Colors.orange,
-        ),
-      );
-      // Refresh the list
-      viewModel.getAllMembershipRequests(widget.gymId);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(viewModel.errorMessage ?? 'Failed to reject request'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
 }
 
-class MembershipRequestCard extends StatelessWidget {
-  final MembershipRequestModel request;
-  final VoidCallback? onApprove;
-  final VoidCallback? onReject;
+class MembershipCard extends StatelessWidget {
+  final MembershipModel membership;
+  final VoidCallback onTap;
 
-  const MembershipRequestCard({
+  const MembershipCard({
     super.key,
-    required this.request,
-    this.onApprove,
-    this.onReject,
+    required this.membership,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final dateFormat = DateFormat('MMM dd, yyyy');
-    final timeFormat = DateFormat('hh:mm a');
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: 12),
       elevation: 2,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
-          color: request.statusColor.withValues(alpha: 0.3),
+          color: membership.statusColor.withValues(alpha: 0.3),
           width: 2,
         ),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // User Info
-            Row(
-              children: [
-                CircleAvatar(
-                  radius: 24,
-                  backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.1),
-                  child: Text(
-                    request.userName[0].toUpperCase(),
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.person,
                       color: Theme.of(context).primaryColor,
+                      size: 24,
                     ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        request.userName,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Membership #${membership.membershipId}',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
-                      Text(
-                        request.userMobile,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey.shade600,
+                        const SizedBox(height: 4),
+                        Text(
+                          'User ID: ${membership.userId}',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey.shade600,
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: request.statusColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: request.statusColor),
-                  ),
-                  child: Text(
-                    request.statusText,
-                    style: TextStyle(
-                      color: request.statusColor,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
+                      ],
                     ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            const Divider(),
-            const SizedBox(height: 12),
-
-            // Plan Details
-            Row(
-              children: [
-                Expanded(
-                  child: _buildInfoRow(
-                    icon: Icons.card_membership,
-                    label: 'Plan',
-                    value: request.planName,
-                  ),
-                ),
-                Expanded(
-                  child: _buildInfoRow(
-                    icon: Icons.currency_rupee,
-                    label: 'Price',
-                    value: '₹${request.planPrice}',
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            _buildInfoRow(
-              icon: Icons.calendar_today,
-              label: 'Duration',
-              value: '${request.planDuration} days',
-            ),
-            const SizedBox(height: 8),
-            _buildInfoRow(
-              icon: Icons.access_time,
-              label: 'Requested On',
-              value: '${dateFormat.format(request.requestedOn)} at ${timeFormat.format(request.requestedOn)}',
-            ),
-
-            // Action Buttons (only for pending)
-            if (onApprove != null || onReject != null) ...[
-              const SizedBox(height: 16),
-              const Divider(),
-              const SizedBox(height: 12),
-              Consumer<MembershipViewModel>(
-                builder: (context, viewModel, child) {
-                  final isProcessing = viewModel.isProcessingRequest(request.membershipId);
-                  
-                  if (isProcessing) {
-                    return const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(8.0),
-                        child: CircularProgressIndicator(),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: membership.statusColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: membership.statusColor),
+                    ),
+                    child: Text(
+                      membership.statusText,
+                      style: TextStyle(
+                        color: membership.statusColor,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
                       ),
-                    );
-                  }
-
-                  return Row(
-                    children: [
-                      if (onReject != null)
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            onPressed: onReject,
-                            icon: const Icon(Icons.close),
-                            label: const Text('Reject'),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: Colors.red,
-                              side: const BorderSide(color: Colors.red),
-                            ),
-                          ),
-                        ),
-                      if (onReject != null && onApprove != null)
-                        const SizedBox(width: 12),
-                      if (onApprove != null)
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            onPressed: onApprove,
-                            icon: const Icon(Icons.check, color: Colors.white),
-                            label: const Text(
-                              'Approve',
-                              style: TextStyle(color: Colors.white),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green,
-                            ),
-                          ),
-                        ),
-                    ],
-                  );
-                },
+                    ),
+                  ),
+                ],
+              ),
+              const Divider(height: 24),
+              Row(
+                children: [
+                  Icon(Icons.calendar_today, size: 16, color: Colors.grey.shade600),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Start: ${dateFormat.format(membership.startDate.toLocal())}',
+                    style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
+                  ),
+                  const Spacer(),
+                  Icon(Icons.event_available, size: 16, color: Colors.grey.shade600),
+                  const SizedBox(width: 8),
+                  Text(
+                    'End: ${dateFormat.format(membership.endDate.toLocal())}',
+                    style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Icon(Icons.access_time, size: 16, color: Colors.grey.shade600),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Created: ${dateFormat.format(membership.createdAt.toLocal())}',
+                    style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
+                  ),
+                  const Spacer(),
+                  Icon(
+                    Icons.chevron_right,
+                    color: Colors.grey.shade400,
+                  ),
+                ],
               ),
             ],
-          ],
+          ),
         ),
       ),
     );
   }
-
-  Widget _buildInfoRow({
-    required IconData icon,
-    required String label,
-    required String value,
-  }) {
-    return Row(
-      children: [
-        Icon(icon, size: 16, color: Colors.grey.shade600),
-        const SizedBox(width: 6),
-        Text(
-          '$label: ',
-          style: TextStyle(
-            fontSize: 13,
-            color: Colors.grey.shade600,
-          ),
-        ),
-        Expanded(
-          child: Text(
-            value,
-            style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
 }
+
 

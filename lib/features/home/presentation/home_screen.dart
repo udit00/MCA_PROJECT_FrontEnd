@@ -51,7 +51,10 @@ class HomeScreen extends StatelessWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const NotificationCenter(),
+                            builder: (context) => ChangeNotifierProvider.value(
+                              value: notificationViewModel,
+                              child: const NotificationCenter(),
+                            ),
                           ),
                         );
                       },
@@ -313,26 +316,16 @@ class HomeScreen extends StatelessWidget {
             'title': 'Membership Requests',
             'subtitle': 'Pending approvals',
             'color': Colors.orange,
-            'onTap': () async {
-              final gymId = await StorageService.instance.getGymId();
-              if (gymId != null && context.mounted) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ChangeNotifierProvider(
-                      create: (_) => MembershipViewModel(),
-                      child: MembershipRequestsScreen(gymId: gymId),
-                    ),
+            'onTap': () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ChangeNotifierProvider(
+                    create: (_) => MembershipViewModel(),
+                    child: const MembershipRequestsScreen(),
                   ),
-                );
-              } else if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('No gym associated with your account'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-              }
+                ),
+              );
             },
           },
           {
@@ -397,26 +390,16 @@ class HomeScreen extends StatelessWidget {
             'title': 'Membership Requests',
             'subtitle': 'Pending approvals',
             'color': Colors.orange,
-            'onTap': () async {
-              final gymId = await StorageService.instance.getGymId();
-              if (gymId != null && context.mounted) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ChangeNotifierProvider(
-                      create: (_) => MembershipViewModel(),
-                      child: MembershipRequestsScreen(gymId: gymId),
-                    ),
+            'onTap': () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ChangeNotifierProvider(
+                    create: (_) => MembershipViewModel(),
+                    child: MembershipRequestsScreen(),
                   ),
-                );
-              } else if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('No gym associated with your account'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-              }
+                ),
+              );
             },
           },
           {

@@ -31,9 +31,10 @@ class MembershipRepository {
     return CommonApiResponse.fromJson(response);
   }
 
-  /// Get all membership requests for a gym (for owners/managers)
-  Future<CommonApiResponse> getAllMembershipRequests(int gymId) async {
-    final response = await _apiService.get('membership/getAllMembershipRequests?gymId=$gymId');
+  /// Get all memberships by filter (for owners/managers)
+  /// filterBy: P (Pending), A (Approved), R (Rejected)
+  Future<CommonApiResponse> getAllMemberships(String filterBy) async {
+    final response = await _apiService.get('membership/getAllMemberships?filterBy=$filterBy');
     return CommonApiResponse.fromJson(response);
   }
 
