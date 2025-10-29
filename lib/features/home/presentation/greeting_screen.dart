@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:zymm/features/home/presentation/viewmodel/greeting_viewmodel.dart';
 import 'package:zymm/features/home/presentation/home_screen.dart';
+import 'package:zymm/features/notifications/presentation/viewmodel/notification_viewmodel.dart';
 
 class GreetingScreen extends StatefulWidget {
   final String displayName;
@@ -18,6 +19,8 @@ class _GreetingScreenState extends State<GreetingScreen> {
   void initState() {
     super.initState();
     Provider.of<GreetingViewModel>(context, listen: false).fetchSelfData();
+    // Fetch notifications in background
+    Provider.of<NotificationViewModel>(context, listen: false).fetchNotifications();
   }
 
   @override

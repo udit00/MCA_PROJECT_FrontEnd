@@ -4,6 +4,9 @@ import 'package:provider/provider.dart';
 import 'package:zymm/common/enums/user_role.dart';
 import 'package:zymm/features/attendance/presentation/attendance_screen.dart';
 import 'package:zymm/features/attendance/presentation/viewmodel/attendance_viewmodel.dart';
+import 'package:zymm/features/feedback/presentation/screens/all_feedbacks_screen.dart';
+import 'package:zymm/features/notifications/presentation/notification_center.dart';
+import 'package:zymm/features/notifications/presentation/viewmodel/notification_viewmodel.dart';
 import 'package:zymm/core/storage/storage_service.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -34,6 +37,54 @@ class HomeScreen extends StatelessWidget {
           backgroundColor: Colors.transparent,
           foregroundColor: Theme.of(context).primaryColor,
           actions: [
+            // Notification Icon with Badge
+            Consumer<NotificationViewModel>(
+              builder: (context, notificationViewModel, child) {
+                final unreadCount = notificationViewModel.unreadCount;
+                return Stack(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.notifications_outlined),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const NotificationCenter(),
+                          ),
+                        );
+                      },
+                    ),
+                    if (unreadCount > 0)
+                      Positioned(
+                        right: 8,
+                        top: 8,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 1.5),
+                          ),
+                          constraints: const BoxConstraints(
+                            minWidth: 18,
+                            minHeight: 18,
+                          ),
+                          child: Center(
+                            child: Text(
+                              unreadCount > 99 ? '99+' : unreadCount.toString(),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                );
+              },
+            ),
             IconButton(
               icon: const Icon(Icons.person_outline),
               onPressed: () => _showProfileMenu(context),
@@ -429,7 +480,7 @@ class HomeScreen extends StatelessWidget {
             'title': 'Current Gym',
             'subtitle': 'My gym details',
             'color': Colors.blue,
-            'onTap': () {}, // TODO: Navigate to current gym / join gym
+            'onTap': () {      },
           },
           {
             'icon': Icons.search,

@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:zymm/features/attendance/presentation/viewmodel/attendance_viewmodel.dart';
 import 'package:zymm/features/auth/presentation/viewmodel/owner_registration_viewmodel.dart';
 import 'package:zymm/features/auth/presentation/viewmodel/registration_viewmodel.dart';
+import 'package:zymm/features/feedback/presentation/viewmodel/feedback_viewmodel.dart';
+import 'package:zymm/features/notifications/presentation/viewmodel/notification_viewmodel.dart';
 import 'package:zymm/features/onboarding/presentation/onboarding_screen.dart';
 import 'package:zymm/utils/screen_dimensions.dart';
 import 'features/auth/presentation/viewmodel/login_viewmodel.dart';
@@ -28,6 +30,8 @@ class MyApp extends StatelessWidget {
           ChangeNotifierProvider(create: (_) => RegistrationViewModel()),
           ChangeNotifierProvider(create: (_) => OwnerRegistrationViewModel()),
           ChangeNotifierProvider(create: (_) => AttendanceViewModel()),
+          ChangeNotifierProvider(create: (_) => NotificationViewModel()),
+          ChangeNotifierProvider(create: (_) => FeedbackViewModel()),
         ],
         child: MaterialApp(
           title: 'Flutter Demo',
