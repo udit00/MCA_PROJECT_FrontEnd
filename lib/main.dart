@@ -1,14 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:zymm/features/attendance/presentation/viewmodel/attendance_viewmodel.dart';
-import 'package:zymm/features/auth/presentation/viewmodel/owner_registration_viewmodel.dart';
-import 'package:zymm/features/auth/presentation/viewmodel/registration_viewmodel.dart';
-import 'package:zymm/features/feedback/presentation/viewmodel/feedback_viewmodel.dart';
-import 'package:zymm/features/notifications/presentation/viewmodel/notification_viewmodel.dart';
 import 'package:zymm/features/onboarding/presentation/onboarding_screen.dart';
 import 'package:zymm/utils/screen_dimensions.dart';
-import 'features/auth/presentation/viewmodel/login_viewmodel.dart';
-import 'features/home/presentation/viewmodel/greeting_viewmodel.dart';
 import 'features/onboarding/presentation/viewmodel/onboarding_viewmodel.dart';
 
 
@@ -22,26 +15,17 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     ScreenDimensions.init(context);
-    return MultiProvider(
-        providers: [
-          ChangeNotifierProvider(create: (_) => OnboardingViewModel()),
-          ChangeNotifierProvider(create: (_) => LoginViewModel()),
-          ChangeNotifierProvider(create: (_) => GreetingViewModel()),
-          ChangeNotifierProvider(create: (_) => RegistrationViewModel()),
-          ChangeNotifierProvider(create: (_) => OwnerRegistrationViewModel()),
-          ChangeNotifierProvider(create: (_) => AttendanceViewModel()),
-          ChangeNotifierProvider(create: (_) => NotificationViewModel()),
-          ChangeNotifierProvider(create: (_) => FeedbackViewModel()),
-        ],
-        child: MaterialApp(
-          title: 'Flutter Demo',
-          debugShowCheckedModeBanner: false,
-          theme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-            useMaterial3: true,
-          ),
-          home: OnboardingScreen(),
-        )
+    return ChangeNotifierProvider(
+      create: (_) => OnboardingViewModel(),
+      child: MaterialApp(
+        title: 'Flutter Demo',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+          useMaterial3: true,
+        ),
+        home: const OnboardingScreen(),
+      ),
     );
   }
 }

@@ -11,7 +11,7 @@ class ApiService {
   }
 
   static const String liveUrl = 'http://194.164.148.69:5000';
-  static const String testUrl = 'http://10.0.3.2:5000';  // Use 10.0.3.2 for Genymotion Emulator (or use 192.168.0.100 if this doesn't work)
+  static const String testUrl = 'http://10.0.2.2:5000';  // Use 10.0.3.2 for Genymotion Emulator (or use 192.168.0.100 if this doesn't work)
 
   static const String envUrl = testUrl;
 

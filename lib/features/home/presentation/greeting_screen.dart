@@ -16,16 +16,22 @@ class GreetingScreen extends StatefulWidget {
 
 class _GreetingScreenState extends State<GreetingScreen> {
   @override
-  void initState() {
-    super.initState();
-    Provider.of<GreetingViewModel>(context, listen: false).fetchSelfData();
-    // Fetch notifications in background
-    Provider.of<NotificationViewModel>(context, listen: false).fetchNotifications();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return Consumer<GreetingViewModel>(
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => GreetingViewModel()),
+        ChangeNotifierProvider(create: (_) => NotificationViewModel()),
+      ],
+      child: Builder(
+        builder: (context) {
+          // Fetch data after providers are created
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted) return;
+            context.read<GreetingViewModel>().fetchSelfData();
+            context.read<NotificationViewModel>().fetchNotifications();
+          });
+          
+          return Consumer<GreetingViewModel>(
       builder: (context, greetingVM, child) {
 
         if (greetingVM.state == GreetingState.success) {
@@ -205,6 +211,9 @@ class _GreetingScreenState extends State<GreetingScreen> {
           ),
         );
       },
+          );
+        },
+      ),
     );
   }
 }

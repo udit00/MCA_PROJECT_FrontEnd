@@ -1,6 +1,6 @@
 # ZYMM App - Features Documentation
 
-This document provides comprehensive information about the Notification Center and Feedback System implementations.
+This document provides comprehensive information about the Notification Center, Feedback System, and Gym Search & Discovery implementations.
 
 ---
 
@@ -195,9 +195,211 @@ lib/features/feedback/
 
 ---
 
+# 3. Gym Search & Discovery
+
+## Overview
+A complete gym search and discovery system allowing users to search for gyms by name, city, or state, view gym details, and interact with the feedback system.
+
+## Features
+
+### Two Main Screens
+
+#### 1. Search Gyms Screen
+**Purpose:** Search and browse all available gyms
+
+**Features:**
+- Search bar with real-time filtering
+- Search by gym name, city, or state (case-insensitive)
+- Debounced search (500ms delay)
+- Clear search functionality
+- Gym cards showing:
+  - Gym name
+  - Average rating badge
+  - Location (city, state)
+  - Contact number
+  - Number of reviews
+  - Number of trainers
+- Pull-to-refresh
+- Empty state handling
+- Loading and error states
+- Tap any card to view full details
+
+**Usage:**
+```dart
+Navigator.push(
+  context,
+  MaterialPageRoute(
+    builder: (context) => const SearchGymsScreen(),
+  ),
+);
+```
+
+#### 2. Gym Detail Screen
+**Purpose:** View complete gym information and interact with features
+
+**Features:**
+- Beautiful expandable app bar with gym name
+- Rating summary card (if reviews exist):
+  - Large average rating display
+  - Star visualization
+  - Total reviews count
+- Contact Information section:
+  - Phone number (tap to call)
+  - Email (tap to send email)
+- Location section:
+  - Full address
+  - City
+  - State
+- Statistics section:
+  - Number of trainers
+  - Number of staff
+  - Number of managers
+  - Active membership plans
+- **Action Buttons:**
+  - "Rate This Gym" - Opens CreateFeedbackScreen
+  - "View All Reviews" - Opens AllFeedbacksScreen
+- Auto-refreshes after feedback submission
+
+**Usage:**
+```dart
+Navigator.push(
+  context,
+  MaterialPageRoute(
+    builder: (context) => GymDetailScreen(gymId: 1),
+  ),
+);
+```
+
+### Backend API
+
+#### Search Gyms Endpoint
+```
+GET /zymm/v1/gym/searchGyms?query={searchTerm}
+```
+- Empty query returns all gyms
+- Searches in gym name, city, and state (case-insensitive)
+- Returns `GymRecordWithAdditionalData` including ratings
+
+**Response:**
+```json
+{
+  "status": 200,
+  "data": [
+    {
+      "gymId": 1,
+      "gymName": "PowerFit Gym",
+      "state": "California",
+      "city": "Los Angeles",
+      "gymAddress": "123 Fitness St",
+      "contactNo": "555-0100",
+      "officialEmail": "info@powerfit.com",
+      "createdBy": 1,
+      "createdAt": "2025-01-15T10:00:00Z",
+      "updatedAt": null,
+      "locationLat": "34.0522",
+      "locationLong": "-118.2437",
+      "averageRating": 4,
+      "totalFeedbacks": 25,
+      "trainersCount": 5,
+      "staffCount": 3,
+      "managersCount": 1,
+      "activePlans": 4
+    }
+  ]
+}
+```
+
+#### Get Gym Data Endpoint
+```
+GET /zymm/v1/gym/getGymData?gymId={id}
+```
+Returns complete gym information with statistics
+
+### File Structure
+```
+lib/features/gym/
+├── data/
+│   └── repositories/
+│       └── gym_repository.dart           # API calls
+└── presentation/
+    ├── screens/
+    │   ├── search_gyms_screen.dart       # Search/browse gyms
+    │   └── gym_detail_screen.dart        # Gym details with actions
+    └── viewmodel/
+        └── gym_viewmodel.dart            # State management
+```
+
+### Integration with Feedback System
+
+The gym detail screen is fully integrated with the feedback system:
+
+1. **Rate This Gym Button**: Opens `CreateFeedbackScreen` with gymId
+2. **View All Reviews Button**: Opens `AllFeedbacksScreen` with gymId and gymName
+3. **Auto-Refresh**: After submitting feedback, gym data auto-refreshes to show updated rating
+
+### ViewModel Features
+
+**GymViewModel** provides:
+- Search gyms with optional query
+- Get gym by ID
+- Filter gyms by city
+- Filter gyms by state
+- Get unique cities/states from results
+- Clear search functionality
+- State management for loading, success, error
+
+### UI/UX Features
+
+#### Visual Design
+- Expandable app bar with gradient background
+- Card-based gym listings
+- Color-coded rating badges (amber)
+- Stat chips with icons
+- Gradient rating summary card
+- Section-based detail layout
+
+#### User Experience
+- Real-time search with debouncing
+- Tap-to-call phone numbers
+- Tap-to-email addresses
+- Pull-to-refresh on search screen
+- Loading indicators
+- Empty state messages
+- Error handling with retry
+- Navigation flow to feedback screens
+
+### Search Functionality
+
+The search is **smart and flexible**:
+- Searches across gym name, city, and state
+- Case-insensitive matching
+- Partial match support
+- Empty query returns all gyms
+- Results sorted alphabetically by gym name
+
+**Examples:**
+- Search "Power" → Finds "PowerFit Gym"
+- Search "Los Angeles" → Finds all LA gyms
+- Search "California" → Finds all CA gyms
+- Empty search → Shows all gyms
+
+### Required Permissions
+
+The `url_launcher` package is used for:
+- Phone calls (`tel:` scheme)
+- Email (`mailto:` scheme)
+
+### Dependencies Added
+```yaml
+dependencies:
+  url_launcher: ^6.3.0
+```
+
+---
+
 # Provider Setup
 
-Both features are registered in `main.dart`:
+All three features are registered in `main.dart`:
 
 ```dart
 MultiProvider(
@@ -205,6 +407,7 @@ MultiProvider(
     // ... other providers
     ChangeNotifierProvider(create: (_) => NotificationViewModel()),
     ChangeNotifierProvider(create: (_) => FeedbackViewModel()),
+    ChangeNotifierProvider(create: (_) => GymViewModel()),
   ],
   // ...
 )

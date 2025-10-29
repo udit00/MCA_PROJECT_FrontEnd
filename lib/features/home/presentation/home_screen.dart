@@ -4,7 +4,9 @@ import 'package:provider/provider.dart';
 import 'package:zymm/common/enums/user_role.dart';
 import 'package:zymm/features/attendance/presentation/attendance_screen.dart';
 import 'package:zymm/features/attendance/presentation/viewmodel/attendance_viewmodel.dart';
-import 'package:zymm/features/feedback/presentation/screens/all_feedbacks_screen.dart';
+import 'package:zymm/features/gym/presentation/screens/search_gyms_screen.dart';
+import 'package:zymm/features/membership/presentation/screens/membership_requests_screen.dart';
+import 'package:zymm/features/membership/presentation/viewmodel/membership_viewmodel.dart';
 import 'package:zymm/features/notifications/presentation/notification_center.dart';
 import 'package:zymm/features/notifications/presentation/viewmodel/notification_viewmodel.dart';
 import 'package:zymm/core/storage/storage_service.dart';
@@ -311,7 +313,27 @@ class HomeScreen extends StatelessWidget {
             'title': 'Membership Requests',
             'subtitle': 'Pending approvals',
             'color': Colors.orange,
-            'onTap': () {}, // TODO: Navigate to pending requests
+            'onTap': () async {
+              final gymId = await StorageService.instance.getGymId();
+              if (gymId != null && context.mounted) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ChangeNotifierProvider(
+                      create: (_) => MembershipViewModel(),
+                      child: MembershipRequestsScreen(gymId: gymId),
+                    ),
+                  ),
+                );
+              } else if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('No gym associated with your account'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            },
           },
           {
             'icon': Icons.people,
@@ -375,7 +397,27 @@ class HomeScreen extends StatelessWidget {
             'title': 'Membership Requests',
             'subtitle': 'Pending approvals',
             'color': Colors.orange,
-            'onTap': () {}, // TODO: Navigate to pending requests
+            'onTap': () async {
+              final gymId = await StorageService.instance.getGymId();
+              if (gymId != null && context.mounted) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ChangeNotifierProvider(
+                      create: (_) => MembershipViewModel(),
+                      child: MembershipRequestsScreen(gymId: gymId),
+                    ),
+                  ),
+                );
+              } else if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('No gym associated with your account'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            },
           },
           {
             'icon': Icons.people,
@@ -487,7 +529,14 @@ class HomeScreen extends StatelessWidget {
             'title': 'Search Gyms',
             'subtitle': 'Find nearby gyms',
             'color': Colors.green,
-            'onTap': () {}, // TODO: Navigate to search gyms
+            'onTap': () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SearchGymsScreen(),
+                ),
+              );
+            },
           },
           {
             'icon': Icons.chat,

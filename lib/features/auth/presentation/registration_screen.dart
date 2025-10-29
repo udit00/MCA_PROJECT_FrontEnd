@@ -36,7 +36,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<RegistrationViewModel>(
+    return ChangeNotifierProvider(
+      create: (_) => RegistrationViewModel(),
+      child: Consumer<RegistrationViewModel>(
       builder: (context, registrationVM, child) {
         if (registrationVM.state == ViewState.success) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -328,7 +330,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
             ),
           ),
         );
-      },
+      }),
     );
   }
 }

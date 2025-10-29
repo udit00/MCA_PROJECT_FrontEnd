@@ -70,4 +70,12 @@ class LoginViewModel extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  /// Reset the viewmodel state to idle
+  void resetState() {
+    _state = ViewState.idle;
+    _errorMessage = null;
+    _loginResponse = null;
+    notifyListeners();
+  }
 }

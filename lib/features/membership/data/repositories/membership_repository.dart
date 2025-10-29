@@ -1,0 +1,58 @@
+import 'package:zymm/common/models/common_api_response_model.dart';
+import 'package:zymm/core/network/api_service.dart';
+import 'package:zymm/features/membership/data/models/membership_request_model.dart';
+import 'package:zymm/features/membership/data/models/plan_history_model.dart';
+import 'package:zymm/features/membership/data/models/upsert_plan_request_model.dart';
+
+class MembershipRepository {
+  final ApiService _apiService = ApiService();
+
+  /// Create or update a plan (upsert)
+  Future<CommonApiResponse> upsertPlan(UpsertPlanRequestModel request) async {
+    final response = await _apiService.post('membership/upsertPlan', request.toJson());
+    return CommonApiResponse.fromJson(response);
+  }
+
+  /// Get plan details by ID
+  Future<CommonApiResponse> getPlanDetails(int planId) async {
+    final response = await _apiService.get('membership/getPlanDetails?planId=$planId');
+    return CommonApiResponse.fromJson(response);
+  }
+
+  /// Get all plans for a gym
+  Future<CommonApiResponse> getAllPlansByGymId(int gymId) async {
+    final response = await _apiService.get('membership/getAllPlansByGymId?gymId=$gymId');
+    return CommonApiResponse.fromJson(response);
+  }
+
+  /// Request a plan (for members)
+  Future<CommonApiResponse> requestPlan(RequestPlanModel request) async {
+    final response = await _apiService.post('membership/requestPlan', request.toJson());
+    return CommonApiResponse.fromJson(response);
+  }
+
+  /// Get all membership requests for a gym (for owners/managers)
+  Future<CommonApiResponse> getAllMembershipRequests(int gymId) async {
+    final response = await _apiService.get('membership/getAllMembershipRequests?gymId=$gymId');
+    return CommonApiResponse.fromJson(response);
+  }
+
+  /// Take action on membership request (approve/reject)
+  Future<CommonApiResponse> takeActionOnMembership(TakeActionRequestModel request) async {
+    final response = await _apiService.post('membership/takeActionOnMembership', request.toJson());
+    return CommonApiResponse.fromJson(response);
+  }
+
+  /// Get plan history (pending/approved/rejected requests)
+  Future<CommonApiResponse> getPlanHistory(String filterBy) async {
+    final response = await _apiService.get('membership/planHistory?filterBy=$filterBy');
+    return CommonApiResponse.fromJson(response);
+  }
+
+  /// Cancel membership request
+  Future<CommonApiResponse> cancelMembershipRequest(CancelMembershipRequestModel request) async {
+    final response = await _apiService.post('membership/cancelMembershipRequest', request.toJson());
+    return CommonApiResponse.fromJson(response);
+  }
+}
+

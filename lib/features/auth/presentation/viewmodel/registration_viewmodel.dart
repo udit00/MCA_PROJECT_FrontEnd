@@ -101,6 +101,14 @@ class RegistrationViewModel extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  /// Reset the viewmodel state to idle
+  void resetState() {
+    _state = ViewState.idle;
+    _errorMessage = null;
+    _registrationResponse = null;
+    notifyListeners();
+  }
 }
 
 

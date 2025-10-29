@@ -17,11 +17,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
 
   @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
   void dispose() {
     _usernameController.dispose();
     _passwordController.dispose();
@@ -30,7 +25,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<LoginViewModel>(
+    return ChangeNotifierProvider(
+      create: (_) => LoginViewModel(),
+      child: Consumer<LoginViewModel>(
       builder: (context, loginVM, child) {
         if (loginVM.state == ViewState.success) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -235,7 +232,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           )
         );
-      }
+      }),
     );
   }
 }

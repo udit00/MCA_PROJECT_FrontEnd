@@ -37,6 +37,13 @@ class _OwnerRegistrationScreenState extends State<OwnerRegistrationScreen> {
   bool _isLoadingLocation = false;
 
   @override
+  void initState() {
+    super.initState();
+    // Note: We create OwnerRegistrationViewModel in the build method with ChangeNotifierProvider
+    // so resetState will be called when the screen is first built
+  }
+
+  @override
   void dispose() {
     _displayNameController.dispose();
     _mobileController.dispose();
