@@ -31,8 +31,10 @@ class _GreetingScreenState extends State<GreetingScreen> {
             if (!mounted) return; // Safety check
             Navigator.pushAndRemoveUntil(
               context,
-              MaterialPageRoute(builder: (context) => const HomeScreen()),
-                  (route) => false,
+              MaterialPageRoute(
+                builder: (context) => HomeScreen(userRole: greetingVM.userRole),
+              ),
+              (route) => false,
             );
           });
         }

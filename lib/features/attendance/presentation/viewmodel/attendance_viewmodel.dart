@@ -38,11 +38,26 @@ class AttendanceViewModel extends ChangeNotifier {
       final response = await _repository.getAllAttendance();
 
       if (response.hasError) {
-        _state = ViewState.error;
-        _errorMessage = response.error ?? 'Failed to fetch attendance records';
+        // Check if it's just "no data found" which means empty list
+        final errorMsg = response.error?.toLowerCase() ?? '';
+        if (errorMsg.contains('no') && (errorMsg.contains('data') || errorMsg.contains('record') || errorMsg.contains('found'))) {
+          // Treat "no data found" as empty list, not an error
+          _attendanceList = [];
+          _state = ViewState.success;
+        } else {
+          _state = ViewState.error;
+          _errorMessage = response.error ?? 'Failed to fetch attendance records';
+        }
       } else {
-        final List<dynamic> data = response.data as List<dynamic>;
-        _attendanceList = data.map((json) => AttendanceModel.fromJson(json)).toList();
+        // Handle both null and empty list cases
+        if (response.data == null) {
+          _attendanceList = [];
+        } else if (response.data is List) {
+          final List<dynamic> data = response.data as List<dynamic>;
+          _attendanceList = data.map((json) => AttendanceModel.fromJson(json)).toList();
+        } else {
+          _attendanceList = [];
+        }
         _state = ViewState.success;
       }
     } catch (e) {
