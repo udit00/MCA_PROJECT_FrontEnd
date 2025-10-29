@@ -9,7 +9,7 @@ import 'package:zymm/features/membership/presentation/screens/membership_request
 import 'package:zymm/features/membership/presentation/viewmodel/membership_viewmodel.dart';
 import 'package:zymm/features/notifications/presentation/notification_center.dart';
 import 'package:zymm/features/notifications/presentation/viewmodel/notification_viewmodel.dart';
-import 'package:zymm/core/storage/storage_service.dart';
+import 'package:zymm/features/user/presentation/screens/profile_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   final UserRole userRole;
@@ -92,7 +92,14 @@ class HomeScreen extends StatelessWidget {
             ),
             IconButton(
               icon: const Icon(Icons.person_outline),
-              onPressed: () => _showProfileMenu(context),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ProfileScreen(),
+                  ),
+                );
+              },
             ),
           ],
         ),
@@ -595,59 +602,6 @@ class HomeScreen extends StatelessWidget {
               ],
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  void _showProfileMenu(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.access_time),
-              title: const Text('My Attendance'),
-              subtitle: const Text('View attendance records'),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ChangeNotifierProvider(
-                      create: (_) => AttendanceViewModel(),
-                      child: const AttendanceScreen(),
-                    ),
-                  ),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.person),
-              title: const Text('Profile'),
-              subtitle: const Text('View and edit profile'),
-              onTap: () {
-                Navigator.pop(context);
-                // TODO: Navigate to profile
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.logout, color: Colors.red),
-              title: const Text('Logout', style: TextStyle(color: Colors.red)),
-              onTap: () async {
-                await StorageService.instance.clearAllOnLogout();
-                if (context.mounted) {
-                  Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
-                }
-              },
-            ),
-          ],
         ),
       ),
     );
