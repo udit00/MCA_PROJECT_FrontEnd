@@ -51,5 +51,11 @@
 	<string>This app needs access to your location to provide gym location services.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>This app needs access to your location to provide gym location services.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>This app needs access to your camera to take profile pictures.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app needs access to your photo library to select profile pictures.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>This app needs permission to save photos to your library.</string>
 </dict>
 </plist>

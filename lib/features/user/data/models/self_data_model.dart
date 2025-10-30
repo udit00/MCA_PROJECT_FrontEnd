@@ -10,6 +10,9 @@ class SelfDataModel {
   final int? planId;
   final int? gymId;
   final bool visitedToday;
+  final int unreadNotificationCount;
+  final dynamic activeMembershipDetails;
+  final dynamic planDetails;
 
   SelfDataModel({
     required this.userId,
@@ -23,6 +26,9 @@ class SelfDataModel {
     this.planId,
     this.gymId,
     required this.visitedToday,
+    this.unreadNotificationCount = 0,
+    this.activeMembershipDetails,
+    this.planDetails,
   });
 
   factory SelfDataModel.fromJson(Map<String, dynamic> json) {
@@ -38,6 +44,9 @@ class SelfDataModel {
       planId: json['planId'],
       gymId: json['gymId'],
       visitedToday: json['visitedToday'] ?? false,
+      unreadNotificationCount: json['unreadNotificationCount'] ?? 0,
+      activeMembershipDetails: json['activeMembershipDetails'],
+      planDetails: json['planDetails'],
     );
   }
 
@@ -53,6 +62,9 @@ class SelfDataModel {
         'planId': planId,
         'gymId': gymId,
         'visitedToday': visitedToday,
+        'unreadNotificationCount': unreadNotificationCount,
+        'activeMembershipDetails': activeMembershipDetails,
+        'planDetails': planDetails,
       };
 
   String get genderDisplay {

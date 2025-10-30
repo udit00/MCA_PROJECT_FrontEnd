@@ -31,6 +31,7 @@ class RegistrationViewModel extends ChangeNotifier {
     required String password,
     required String gender,
     String? email,
+    String? displayPic,
     String locationLat = "",
     String locationLong = "",
   }) async {
@@ -68,6 +69,7 @@ class RegistrationViewModel extends ChangeNotifier {
         password: password,
         gender: gender,
         email: email?.isNotEmpty == true ? email : null,
+        displayPic: displayPic,
         locationLat: locationLat,
         locationLong: locationLong,
         ipAddress: await NetworkInfo.getLocalIpAddress(),

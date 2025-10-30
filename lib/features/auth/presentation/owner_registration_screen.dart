@@ -4,6 +4,7 @@ import 'package:zymm/core/location/location_service.dart';
 import 'package:zymm/features/home/presentation/greeting_screen.dart';
 import 'package:zymm/features/auth/presentation/viewmodel/owner_registration_viewmodel.dart';
 import 'package:zymm/features/auth/presentation/registration_screen.dart';
+import 'package:zymm/common/widgets/profile_image_picker.dart';
 
 class OwnerRegistrationScreen extends StatefulWidget {
   const OwnerRegistrationScreen({super.key});
@@ -35,6 +36,7 @@ class _OwnerRegistrationScreenState extends State<OwnerRegistrationScreen> {
   bool _obscureConfirmPassword = true;
   LocationData? _gymLocation;
   bool _isLoadingLocation = false;
+  String? _profileImageBase64;
 
   @override
   void initState() {
@@ -159,6 +161,27 @@ class _OwnerRegistrationScreenState extends State<OwnerRegistrationScreen> {
                       // PERSONAL DETAILS SECTION
                       _buildSectionHeader('Personal Details'),
                       const SizedBox(height: 16),
+
+                      // Profile Image Picker
+                      ProfileImagePicker(
+                        base64Image: _profileImageBase64,
+                        onImageSelected: (base64Image) {
+                          setState(() {
+                            _profileImageBase64 = base64Image;
+                          });
+                        },
+                        size: 100,
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Tap to add profile picture (optional)',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
 
                       TextFormField(
                         controller: _displayNameController,
@@ -444,6 +467,7 @@ class _OwnerRegistrationScreenState extends State<OwnerRegistrationScreen> {
                                       ownerPersonalEmail: _ownerEmailController.text.trim().isNotEmpty
                                           ? _ownerEmailController.text.trim()
                                           : null,
+                                      displayPic: _profileImageBase64,
                                       gymName: _gymNameController.text.trim(),
                                       state: _stateController.text.trim(),
                                       city: _cityController.text.trim(),

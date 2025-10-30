@@ -4,6 +4,7 @@ import 'package:zymm/core/location/location_service.dart';
 import 'package:zymm/features/home/presentation/greeting_screen.dart';
 import 'package:zymm/features/auth/presentation/viewmodel/registration_viewmodel.dart';
 import 'package:zymm/features/auth/presentation/owner_registration_screen.dart';
+import 'package:zymm/common/widgets/profile_image_picker.dart';
 
 class RegistrationScreen extends StatefulWidget {
   const RegistrationScreen({super.key});
@@ -23,6 +24,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   String _selectedGender = 'M';
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
+  String? _profileImageBase64;
 
   @override
   void dispose() {
@@ -103,6 +105,27 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                       ),
                     ),
                     const SizedBox(height: 32),
+                    
+                    // Profile Image Picker
+                    ProfileImagePicker(
+                      base64Image: _profileImageBase64,
+                      onImageSelected: (base64Image) {
+                        setState(() {
+                          _profileImageBase64 = base64Image;
+                        });
+                      },
+                      size: 100,
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Tap to add profile picture (optional)',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
                     
                     // Display Name Field
                     TextFormField(
@@ -275,6 +298,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                                       email: _emailController.text.trim().isNotEmpty 
                                           ? _emailController.text.trim() 
                                           : null,
+                                      displayPic: _profileImageBase64,
                                       locationLat: location.latitude,
                                       locationLong: location.longitude,
                                     );

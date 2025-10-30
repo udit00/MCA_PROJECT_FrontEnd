@@ -1,3 +1,4 @@
+import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -15,13 +16,68 @@ import 'package:zymm/features/membership/presentation/viewmodel/membership_viewm
 import 'package:zymm/features/notifications/presentation/notification_center.dart';
 import 'package:zymm/features/notifications/presentation/viewmodel/notification_viewmodel.dart';
 import 'package:zymm/features/user/presentation/screens/profile_screen.dart';
+import 'package:zymm/features/user/data/models/self_data_model.dart';
+import 'package:zymm/features/user/data/repositories/user_repository.dart';
+import 'package:zymm/utils/image_url_helper.dart';
 
 import '../../gym/presentation/viewmodel/gym_viewmodel.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   final UserRole userRole;
 
   const HomeScreen({super.key, required this.userRole});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final UserRepository _userRepository = UserRepository();
+  SelfDataModel? _userData;
+  bool _isLoadingUserData = false;
+  bool _hasInitialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchData();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Only fetch on first build
+    if (!_hasInitialized) {
+      _hasInitialized = true;
+    }
+  }
+
+  Future<void> _fetchData() async {
+    developer.log('🔄 HomeScreen: Fetching user data...');
+    setState(() {
+      _isLoadingUserData = true;
+    });
+
+    try {
+      // Fetch user data (includes notification count)
+      final userData = await _userRepository.getSelfDataParsed();
+      developer.log('✅ HomeScreen: User data fetched - profilePic: ${userData.profilePic}');
+      if (mounted) {
+        setState(() {
+          _userData = userData;
+          _isLoadingUserData = false;
+        });
+        developer.log('✅ HomeScreen: State updated with new user data');
+      }
+    } catch (e) {
+      developer.log('❌ HomeScreen: Error fetching user data: $e');
+      if (mounted) {
+        setState(() {
+          _isLoadingUserData = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,68 +92,96 @@ class HomeScreen extends StatelessWidget {
           ),
           centerTitle: true,
           elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.person_outline),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const ProfileScreen(),
+          leading: Row(
+            children: [
+              const SizedBox(width: 8),
+              // Profile Picture
+              GestureDetector(
+                onTap: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ProfileScreen(),
+                    ),
+                  );
+                  // Refresh data when coming back from profile
+                  _fetchData();
+                },
+                child: Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.grey.shade300,
+                    border: Border.all(color: Colors.white, width: 2),
+                  ),
+                  child: ClipOval(
+                    child: _userData?.profilePic != null
+                        ? Image.network(
+                            ImageUrlHelper.getFullImageUrl(_userData!.profilePic),
+                            width: 36,
+                            height: 36,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Icon(Icons.person, size: 20, color: Colors.grey.shade600);
+                            },
+                          )
+                        : Icon(Icons.person, size: 20, color: Colors.grey.shade600),
+                  ),
                 ),
-              );
-            },
+              ),
+            ],
           ),
           actions: [
             // Notification Icon with Badge
-            Consumer<NotificationViewModel>(
-              builder: (context, notificationViewModel, child) {
-                final unreadCount = notificationViewModel.unreadCount;
-                return Stack(
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.notifications_outlined),
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => ChangeNotifierProvider.value(
-                              value: notificationViewModel,
-                              child: const NotificationCenter(),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                    if (unreadCount > 0)
-                      Positioned(
-                        right: 8,
-                        top: 8,
-                        child: Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: BoxDecoration(
-                            color: Colors.red,
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 1.5),
-                          ),
-                          constraints: const BoxConstraints(
-                            minWidth: 18,
-                            minHeight: 18,
-                          ),
-                          child: Center(
-                            child: Text(
-                              unreadCount > 99 ? '99+' : unreadCount.toString(),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
+            Stack(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.notifications_outlined),
+                  onPressed: () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ChangeNotifierProvider(
+                          create: (_) => NotificationViewModel()..fetchNotifications(),
+                          child: const NotificationCenter(),
+                        ),
+                      ),
+                    );
+                    // Refresh data when coming back from notifications
+                    _fetchData();
+                  },
+                ),
+                if (_userData != null && _userData!.unreadNotificationCount > 0)
+                  Positioned(
+                    right: 8,
+                    top: 8,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 1.5),
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 18,
+                        minHeight: 18,
+                      ),
+                      child: Center(
+                        child: Text(
+                          _userData!.unreadNotificationCount > 99 
+                              ? '99+' 
+                              : _userData!.unreadNotificationCount.toString(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
-                  ],
-                );
-              },
+                    ),
+                  ),
+              ],
             ),
           ],
         ),
@@ -157,7 +241,7 @@ class HomeScreen extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           Text(
-            userRole.displayName,
+            widget.userRole.displayName,
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.bold,
@@ -170,7 +254,7 @@ class HomeScreen extends StatelessWidget {
   }
 
   IconData _getRoleIcon() {
-    switch (userRole) {
+    switch (widget.userRole) {
       case UserRole.owner:
         return Icons.business_center;
       case UserRole.manager:
@@ -245,7 +329,7 @@ class HomeScreen extends StatelessWidget {
   }
 
   String _getWelcomeMessage() {
-    switch (userRole) {
+    switch (widget.userRole) {
       case UserRole.owner:
         return 'Business Dashboard';
       case UserRole.manager:
@@ -260,7 +344,7 @@ class HomeScreen extends StatelessWidget {
   }
 
   String _getWelcomeSubtext() {
-    switch (userRole) {
+    switch (widget.userRole) {
       case UserRole.owner:
         return 'Manage your gym operations';
       case UserRole.manager:
@@ -297,7 +381,7 @@ class HomeScreen extends StatelessWidget {
   }
 
   List<Map<String, dynamic>> _getActionsForRole(BuildContext context) {
-    switch (userRole) {
+    switch (widget.userRole) {
       case UserRole.owner:
         return [
           // TODO: Add conditional logic for Manage gyms vs Gym card based on gym count

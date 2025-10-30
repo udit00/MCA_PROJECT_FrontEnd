@@ -4,6 +4,8 @@ import 'package:zymm/common/enums/user_role.dart';
 import 'package:zymm/features/auth/presentation/login_screen.dart';
 import 'package:zymm/features/user/presentation/screens/change_password_screen.dart';
 import 'package:zymm/features/user/presentation/viewmodel/profile_viewmodel.dart';
+import 'package:zymm/utils/image_picker_helper.dart';
+import 'package:zymm/utils/image_url_helper.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -77,23 +79,88 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       child: Column(
                         children: [
                           const SizedBox(height: 24),
-                          // Profile Picture
-                          CircleAvatar(
-                            radius: 60,
-                            backgroundColor: Colors.white,
-                            child: userData.profilePic != null
-                                ? ClipOval(
-                                    child: Image.network(
-                                      userData.profilePic!,
-                                      width: 116,
-                                      height: 116,
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (context, error, stackTrace) =>
-                                          const Icon(Icons.person, size: 60),
+                          // Profile Picture with Edit Option
+                          Stack(
+                            children: [
+                              Container(
+                                width: 120,
+                                height: 120,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Colors.white,
+                                  border: Border.all(color: Colors.white, width: 4),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(alpha: 0.2),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 4),
                                     ),
-                                  )
-                                : const Icon(Icons.person,
-                                    size: 60, color: Colors.grey),
+                                  ],
+                                ),
+                                child: ClipOval(
+                                  child: userData.profilePic != null
+                                      ? Image.network(
+                                          ImageUrlHelper.getFullImageUrl(userData.profilePic),
+                                          width: 120,
+                                          height: 120,
+                                          fit: BoxFit.cover,
+                                          loadingBuilder: (context, child, loadingProgress) {
+                                            if (loadingProgress == null) return child;
+                                            return Center(
+                                              child: CircularProgressIndicator(
+                                                value: loadingProgress.expectedTotalBytes != null
+                                                    ? loadingProgress.cumulativeBytesLoaded /
+                                                        loadingProgress.expectedTotalBytes!
+                                                    : null,
+                                                color: Colors.white,
+                                              ),
+                                            );
+                                          },
+                                          errorBuilder: (context, error, stackTrace) =>
+                                              Container(
+                                                color: Colors.grey.shade200,
+                                                child: const Icon(Icons.person, size: 60, color: Colors.grey),
+                                              ),
+                                        )
+                                      : Container(
+                                          color: Colors.grey.shade200,
+                                          child: const Icon(Icons.person, size: 60, color: Colors.grey),
+                                        ),
+                                ),
+                              ),
+                              Positioned(
+                                bottom: 0,
+                                right: 0,
+                                child: InkWell(
+                                  onTap: () async {
+                                    final imageFile = await ImagePickerHelper.showImageSourceDialogFile(context);
+                                    if (imageFile != null && mounted) {
+                                      viewModel.uploadProfilePicture(imageFile);
+                                    }
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context).primaryColor,
+                                      shape: BoxShape.circle,
+                                      border: Border.all(color: Colors.white, width: 3),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withValues(alpha: 0.2),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
+                                    ),
+                                    child: const Icon(
+                                      Icons.edit,
+                                      color: Colors.white,
+                                      size: 20,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                           const SizedBox(height: 16),
                           // User Name

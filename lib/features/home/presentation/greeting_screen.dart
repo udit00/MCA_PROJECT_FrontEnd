@@ -17,18 +17,14 @@ class GreetingScreen extends StatefulWidget {
 class _GreetingScreenState extends State<GreetingScreen> {
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => GreetingViewModel()),
-        ChangeNotifierProvider(create: (_) => NotificationViewModel()),
-      ],
+    return ChangeNotifierProvider(
+      create: (_) => GreetingViewModel(),
       child: Builder(
         builder: (context) {
-          // Fetch data after providers are created
+          // Fetch data after provider is created
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (!mounted) return;
             context.read<GreetingViewModel>().fetchSelfData();
-            context.read<NotificationViewModel>().fetchNotifications();
           });
           
           return Consumer<GreetingViewModel>(
@@ -41,12 +37,7 @@ class _GreetingScreenState extends State<GreetingScreen> {
             Navigator.pushAndRemoveUntil(
               context,
               MaterialPageRoute(
-                builder: (context) => MultiProvider(
-                  providers: [
-                    ChangeNotifierProvider(create: (_) => NotificationViewModel()..fetchNotifications()),
-                  ],
-                  child: HomeScreen(userRole: greetingVM.userRole),
-                ),
+                builder: (context) => HomeScreen(userRole: greetingVM.userRole),
               ),
               (route) => false,
             );

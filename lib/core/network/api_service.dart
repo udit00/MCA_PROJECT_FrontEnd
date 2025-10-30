@@ -10,15 +10,15 @@ class ApiService {
     return _instance;
   }
 
-  static const String liveUrl = 'http://194.164.148.69:5000';
-  static const String testUrl = 'http://10.0.2.2:5000';  // Use 10.0.3.2 for Genymotion Emulator (or use 192.168.0.100 if this doesn't work)
+  static const String _liveUrl = 'http://194.164.148.69:5000';
+  static const String _testUrl = 'http://10.0.2.2:5000';  // Use 10.0.3.2 for Genymotion Emulator (or use 192.168.0.100 if this doesn't work)
 
-  static const String envUrl = testUrl;
+  static const String envUrl = _testUrl;
 
-  static const String _baseUrl = '$envUrl/zymm/v1/';
+  static const String baseUrl = '$envUrl/zymm/v1/';
 
   ApiService._internal() : _dio = Dio(BaseOptions(
-    baseUrl: _baseUrl,
+    baseUrl: baseUrl,
     connectTimeout: const Duration(seconds: 100),
     receiveTimeout: const Duration(seconds: 100),
     sendTimeout: const Duration(seconds: 100),
