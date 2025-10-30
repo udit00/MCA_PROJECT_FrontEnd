@@ -9,6 +9,8 @@ import 'package:zymm/features/attendance/presentation/viewmodel/attendance_viewm
 import 'package:zymm/features/employee/presentation/screens/manage_employees_screen.dart';
 import 'package:zymm/features/employee/presentation/viewmodel/employee_viewmodel.dart';
 import 'package:zymm/features/gym/presentation/screens/gym_detail_screen.dart';
+import 'package:zymm/features/member/presentation/screens/manage_members_screen.dart';
+import 'package:zymm/features/member/presentation/viewmodel/member_viewmodel.dart';
 import 'package:zymm/features/gym/presentation/screens/search_gyms_screen.dart';
 import 'package:zymm/features/membership/presentation/screens/membership_requests_screen.dart';
 import 'package:zymm/features/membership/presentation/screens/pending_fees_screen.dart';
@@ -463,7 +465,17 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
             'title': 'Manage Members',
             'subtitle': 'All members',
             'color': Colors.green,
-            'onTap': () {}, // TODO: Navigate to members
+            'onTap': () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ChangeNotifierProvider(
+                    create: (_) => MemberViewModel(),
+                    child: const ManageMembersScreen(),
+                  ),
+                ),
+              );
+            },
           },
           {
             'icon': Icons.card_membership,
@@ -588,7 +600,17 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
             'title': 'Manage Members',
             'subtitle': 'All members',
             'color': Colors.green,
-            'onTap': () {}, // TODO: Navigate to members
+            'onTap': () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ChangeNotifierProvider(
+                    create: (_) => MemberViewModel(),
+                    child: const ManageMembersScreen(),
+                  ),
+                ),
+              );
+            },
           },
           {
             'icon': Icons.card_membership,
