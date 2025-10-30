@@ -33,7 +33,7 @@ class _GreetingScreenState extends State<GreetingScreen> {
 
         if (greetingVM.state == GreetingState.success) {
           WidgetsBinding.instance.addPostFrameCallback((_) async {
-            await Future.delayed(const Duration(seconds: 2)); // 👈 Wait 2 seconds
+            await Future.delayed(const Duration(seconds: 2)); // Wait 2 seconds
             if (!mounted) return; // Safety check
             Navigator.pushAndRemoveUntil(
               context,

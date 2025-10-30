@@ -1,4 +1,3 @@
-import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
@@ -172,9 +171,7 @@ class _EditGymScreenState extends State<EditGymScreen> {
         );
       }
 
-      developer.log('Current location: ${position.latitude}, ${position.longitude}');
     } catch (e) {
-      developer.log('Error getting location: $e');
       setState(() {
         _isFetchingLocation = false;
       });
@@ -211,7 +208,6 @@ class _EditGymScreenState extends State<EditGymScreen> {
       'locationLong': _locationLongController.text.trim(),
     };
 
-    developer.log('Updating gym: $gymData');
 
     final success = await context.read<GymViewModel>().updateGym(gymData);
 

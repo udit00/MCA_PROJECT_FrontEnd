@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:zymm/features/messages/data/models/chat_message_model.dart';
@@ -47,7 +46,6 @@ class _ChatScreenState extends State<ChatScreen> {
   /// Start polling every 5 seconds
   void _startPolling() {
     _pollingTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
-      developer.log('🔄 Polling chat messages...');
       _loadChatMessages(silent: true);
     });
   }

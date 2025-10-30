@@ -1,4 +1,3 @@
-import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:zymm/common/enums/user_role.dart';
@@ -51,7 +50,6 @@ class _SelectChatUserScreenState extends State<SelectChatUserScreen> {
         });
       }
     } catch (e) {
-      developer.log('❌ Error loading users: $e');
       if (mounted) {
         setState(() {
           _errorMessage = e.toString();

@@ -1,4 +1,3 @@
-import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:zymm/features/employee/data/models/employee_model.dart';
@@ -33,7 +32,6 @@ class _ManageEmployeesScreenState extends State<ManageEmployeesScreen> with Rout
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Subscribe to route changes
     final route = ModalRoute.of(context);
     if (route is PageRoute) {
       homeScreenRouteObserver.subscribe(this, route);
@@ -48,8 +46,6 @@ class _ManageEmployeesScreenState extends State<ManageEmployeesScreen> with Rout
 
   @override
   void didPopNext() {
-    // Called when coming back to this screen
-    developer.log('🔄 ManageEmployeesScreen: didPopNext - Refetching employees');
     _fetchEmployees();
   }
 
@@ -162,7 +158,6 @@ class _ManageEmployeesScreenState extends State<ManageEmployeesScreen> with Rout
         builder: (context) => const RegisterEmployeeScreen(),
       ),
     );
-    // Note: Employees will automatically refresh via RouteAware.didPopNext()
   }
 
   void _navigateToEmployeeDetail(int employeeId) {
@@ -188,7 +183,6 @@ class EmployeeCard extends StatelessWidget {
     required this.onTap,
   });
 
-  /// Get role color based on role name
   Color _getRoleColor() {
     switch (employee.roleName.toLowerCase()) {
       case 'manager':
@@ -226,7 +220,6 @@ class EmployeeCard extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           child: Row(
             children: [
-              // Avatar
               Container(
                 width: 56,
                 height: 56,
@@ -251,7 +244,6 @@ class EmployeeCard extends StatelessWidget {
               ),
               const SizedBox(width: 16),
 
-              // Employee Info
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -330,7 +322,6 @@ class EmployeeCard extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 8),
-                    // Role chip
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 10,
@@ -356,7 +347,6 @@ class EmployeeCard extends StatelessWidget {
 
               const SizedBox(width: 8),
 
-              // Arrow Icon
               Icon(
                 Icons.arrow_forward_ios,
                 size: 16,

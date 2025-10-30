@@ -1,4 +1,3 @@
-import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:zymm/features/attendance/presentation/view_employee_attendance_screen.dart';
@@ -39,7 +38,6 @@ class _ManageMembersScreenState extends State<ManageMembersScreen> with RouteAwa
 
   @override
   void didPopNext() {
-    developer.log('🔄 ManageMembersScreen: didPopNext - Refetching members');
     _fetchMembers();
   }
 

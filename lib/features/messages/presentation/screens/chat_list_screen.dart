@@ -1,4 +1,3 @@
-import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:zymm/common/enums/user_role.dart';
@@ -54,7 +53,6 @@ class _ChatListScreenState extends State<ChatListScreen> with RouteAware {
 
   @override
   void didPopNext() {
-    developer.log('🔄 ChatListScreen: didPopNext - Refetching participants');
     _loadChatParticipants();
   }
 

@@ -1,4 +1,3 @@
-import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:zymm/common/enums/user_role.dart';
@@ -52,8 +51,6 @@ class _ViewAllPlansScreenState extends State<ViewAllPlansScreen> with RouteAware
 
   @override
   void didPopNext() {
-    // Called when coming back to this screen
-    developer.log('🔄 ViewAllPlansScreen: didPopNext - Refetching plans');
     _loadData();
   }
 

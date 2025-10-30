@@ -1,4 +1,3 @@
-import 'dart:developer' as developer;
 import 'package:flutter/foundation.dart';
 import 'package:zymm/features/member/data/models/gym_member_model.dart';
 import 'package:zymm/features/member/data/repositories/member_repository.dart';
@@ -27,22 +26,18 @@ class MemberViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      developer.log('🔄 Fetching gym members...');
       final response = await _repository.getGymMembers();
 
       if (response.hasError) {
-        developer.log('❌ Error fetching members: ${response.error}');
         _state = MemberViewState.error;
         _errorMessage = response.error ?? 'Failed to load members';
       } else {
-        developer.log('✅ Successfully fetched members');
         final data = response.data;
 
         if (data is List) {
           _members = data
               .map((json) => GymMemberModel.fromJson(json as Map<String, dynamic>))
               .toList();
-          developer.log('📋 Total members: ${_members.length}');
         } else {
           _members = [];
         }
@@ -50,7 +45,6 @@ class MemberViewModel extends ChangeNotifier {
         _state = MemberViewState.loaded;
       }
     } catch (e) {
-      developer.log('❌ Exception fetching members: $e');
       _state = MemberViewState.error;
       _errorMessage = 'Error: ${e.toString()}';
     } finally {

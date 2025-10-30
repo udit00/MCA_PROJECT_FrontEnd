@@ -1,4 +1,3 @@
-import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -70,38 +69,28 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
 
   @override
   void didPopNext() {
-    // Called when the top route has been popped off, and the current route shows up.
-    // This means we're coming back to this screen
-    developer.log('🔄 HomeScreen: didPopNext - Refetching data');
     _fetchData();
   }
 
   @override
   void didPushNext() {
-    // Called when a new route has been pushed, and the current route is no longer visible.
-    developer.log('➡️ HomeScreen: didPushNext - Navigating away');
   }
 
   Future<void> _fetchData() async {
-    developer.log('🔄 HomeScreen: Fetching user data...');
     setState(() {
       _isLoadingUserData = true;
     });
 
     try {
-      // Fetch user data (includes notification count)
       final userData = await _userRepository.getSelfDataParsed();
-      developer.log('✅ HomeScreen: User data fetched - profilePic: ${userData.profilePic}');
       if (mounted) {
         setState(() {
           _userData = userData;
           _isLoadingUserData = false;
         });
-        developer.log('✅ HomeScreen: State updated with new user data');
       }
     } catch (e) {
       await StorageService.instance.clearAllOnLogout();
-      developer.log('❌ HomeScreen: Error fetching user data: $e');
       if (mounted) {
         setState(() {
           _isLoadingUserData = false;

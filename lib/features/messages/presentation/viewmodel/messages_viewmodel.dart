@@ -35,22 +35,18 @@ class MessagesViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      developer.log('🔄 Fetching chat participants...');
       final response = await _repository.getChatParticipants();
 
       if (response.hasError) {
-        developer.log('❌ Error fetching participants: ${response.error}');
         _state = MessagesViewState.error;
         _errorMessage = response.error ?? 'Failed to load chat participants';
       } else {
-        developer.log('✅ Successfully fetched participants');
         final data = response.data;
 
         if (data is List) {
           _participants = data
               .map((json) => ChatParticipantModel.fromJson(json as Map<String, dynamic>))
               .toList();
-          developer.log('📋 Total participants: ${_participants.length}');
         } else {
           _participants = [];
         }
@@ -58,7 +54,6 @@ class MessagesViewModel extends ChangeNotifier {
         _state = MessagesViewState.loaded;
       }
     } catch (e) {
-      developer.log('❌ Exception fetching participants: $e');
       _state = MessagesViewState.error;
       _errorMessage = 'Error: ${e.toString()}';
     } finally {
@@ -75,24 +70,20 @@ class MessagesViewModel extends ChangeNotifier {
     }
 
     try {
-      developer.log('🔄 Fetching chat messages with user $userId...');
       final response = await _repository.getChatMessages(userId);
 
       if (response.hasError) {
-        developer.log('❌ Error fetching messages: ${response.error}');
         if (!silent) {
           _state = MessagesViewState.error;
           _errorMessage = response.error ?? 'Failed to load messages';
         }
       } else {
-        developer.log('✅ Successfully fetched messages');
         final data = response.data;
 
         if (data is List) {
           _currentChatMessages = data
               .map((json) => ChatMessageModel.fromJson(json as Map<String, dynamic>))
               .toList();
-          developer.log('📋 Total messages: ${_currentChatMessages.length}');
         } else {
           _currentChatMessages = [];
         }
@@ -102,7 +93,6 @@ class MessagesViewModel extends ChangeNotifier {
         }
       }
     } catch (e) {
-      developer.log('❌ Exception fetching messages: $e');
       if (!silent) {
         _state = MessagesViewState.error;
         _errorMessage = 'Error: ${e.toString()}';
@@ -122,20 +112,17 @@ class MessagesViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      developer.log('📤 Sending message to user $messageForUserId...');
       final response = await _repository.createMessage(
         messageForUserId: messageForUserId,
         comment: comment,
       );
 
       if (response.hasError) {
-        developer.log('❌ Error sending message: ${response.error}');
         _state = MessagesViewState.error;
         _errorMessage = response.error ?? 'Failed to send message';
         notifyListeners();
         return false;
       } else {
-        developer.log('✅ Message sent successfully');
         
         // Refresh chat messages to include the new message
         await getChatMessages(messageForUserId, silent: true);
@@ -145,7 +132,6 @@ class MessagesViewModel extends ChangeNotifier {
         return true;
       }
     } catch (e) {
-      developer.log('❌ Exception sending message: $e');
       _state = MessagesViewState.error;
       _errorMessage = 'Error: ${e.toString()}';
       notifyListeners();
@@ -156,21 +142,20 @@ class MessagesViewModel extends ChangeNotifier {
   /// Get total unread message count
   Future<void> getUnreadCount() async {
     try {
-      developer.log('🔄 Fetching unread count...');
       final response = await _repository.getUnreadCount();
 
       if (response.hasError) {
-        developer.log('❌ Error fetching unread count: ${response.error}');
+        developer.log('Error fetching unread count: ${response.error}');
       } else {
         final data = response.data;
         if (data is Map<String, dynamic>) {
           _unreadCount = data['unreadCount'] as int? ?? 0;
-          developer.log('📬 Unread count: $_unreadCount');
+          developer.log('Unread count: $_unreadCount');
           notifyListeners();
         }
       }
     } catch (e) {
-      developer.log('❌ Exception fetching unread count: $e');
+      developer.log('Exception fetching unread count: $e');
     }
   }
 
@@ -195,12 +180,10 @@ class MessagesViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      developer.log('🔄 Fetching available chat users...');
       
       final response = await _repository.getAvailableChatUsers();
       
       if (response.hasError) {
-        developer.log('❌ Error fetching chat users: ${response.error}');
         _state = MessagesViewState.error;
         _errorMessage = response.error ?? 'Failed to load chat users';
       } else {
@@ -209,12 +192,10 @@ class MessagesViewModel extends ChangeNotifier {
           _availableChatUsers = data
               .map((json) => ChatUser.fromJson(json as Map<String, dynamic>))
               .toList();
-          developer.log('✅ Loaded ${_availableChatUsers.length} chat users');
         }
         _state = MessagesViewState.loaded;
       }
     } catch (e) {
-      developer.log('❌ Exception fetching available chat users: $e');
       _state = MessagesViewState.error;
       _errorMessage = 'Error: ${e.toString()}';
     } finally {
