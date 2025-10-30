@@ -161,6 +161,29 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen> {
                           ),
                         ),
                       ),
+                      const SizedBox(height: 8),
+                      // Role chip
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: _getRoleColor(employee.roleName).withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: _getRoleColor(employee.roleName),
+                            width: 2,
+                          ),
+                        ),
+                        child: Text(
+                          employee.displayRoleName,
+                          style: TextStyle(
+                            color: _getRoleColor(employee.roleName),
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
                       const SizedBox(height: 32),
                     ],
                   ),
@@ -585,6 +608,22 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen> {
         );
       },
     );
+  }
+
+  /// Get role color based on role name
+  Color _getRoleColor(String roleName) {
+    switch (roleName.toLowerCase()) {
+      case 'manager':
+        return Colors.blue;
+      case 'staff':
+        return Colors.orange;
+      case 'trainer':
+        return Colors.green;
+      case 'owner':
+        return Colors.purple;
+      default:
+        return Colors.grey;
+    }
   }
 }
 

@@ -188,9 +188,26 @@ class EmployeeCard extends StatelessWidget {
     required this.onTap,
   });
 
+  /// Get role color based on role name
+  Color _getRoleColor() {
+    switch (employee.roleName.toLowerCase()) {
+      case 'manager':
+        return Colors.blue;
+      case 'staff':
+        return Colors.orange;
+      case 'trainer':
+        return Colors.green;
+      case 'owner':
+        return Colors.purple;
+      default:
+        return Colors.grey;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDeactivated = !employee.isActive;
+    final roleColor = _getRoleColor();
     
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -311,6 +328,27 @@ class EmployeeCard extends StatelessWidget {
                           ),
                         ),
                       ],
+                    ),
+                    const SizedBox(height: 8),
+                    // Role chip
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: roleColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: roleColor, width: 1.5),
+                      ),
+                      child: Text(
+                        employee.displayRoleName,
+                        style: TextStyle(
+                          color: roleColor,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ],
                 ),

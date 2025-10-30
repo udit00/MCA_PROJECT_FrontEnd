@@ -16,6 +16,8 @@ import 'package:zymm/features/membership/presentation/screens/membership_request
 import 'package:zymm/features/membership/presentation/screens/pending_fees_screen.dart';
 import 'package:zymm/features/membership/presentation/screens/view_all_plans_screen.dart';
 import 'package:zymm/features/membership/presentation/viewmodel/membership_viewmodel.dart';
+import 'package:zymm/features/messages/presentation/screens/chat_list_screen.dart';
+import 'package:zymm/features/messages/presentation/viewmodel/messages_viewmodel.dart';
 import 'package:zymm/features/notifications/presentation/notification_center.dart';
 import 'package:zymm/features/notifications/presentation/viewmodel/notification_viewmodel.dart';
 import 'package:zymm/features/onboarding/presentation/onboarding_screen.dart';
@@ -25,6 +27,7 @@ import 'package:zymm/features/user/data/repositories/user_repository.dart';
 import 'package:zymm/utils/image_url_helper.dart';
 
 import '../../gym/presentation/viewmodel/gym_viewmodel.dart';
+import '../../membership/presentation/screens/plan_detail_screen.dart';
 
 // Global RouteObserver for HomeScreen
 final RouteObserver<PageRoute> homeScreenRouteObserver = RouteObserver<PageRoute>();
@@ -223,6 +226,15 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                     _buildWelcomeCard(context),
                     const SizedBox(height: 32),
                     
+                    // Active Membership Card (for members only)
+                    if (widget.userRole == UserRole.member && 
+                        _userData?.activeMembershipDetails != null &&
+                        _userData?.planDetails != null)
+                      ...[
+                        _buildActiveMembershipCard(context),
+                        const SizedBox(height: 32),
+                      ],
+                    
                     // Section Title
                     Text(
                       'Quick Actions',
@@ -348,6 +360,247 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildActiveMembershipCard(BuildContext context) {
+    final membershipDetails = _userData?.activeMembershipDetails as Map<String, dynamic>?;
+    final planDetails = _userData?.planDetails as Map<String, dynamic>?;
+
+    if (membershipDetails == null || planDetails == null) {
+      return const SizedBox.shrink();
+    }
+
+    final planName = planDetails['planName'] as String? ?? 'Unknown Plan';
+    final planPrice = planDetails['planPrice'] as int? ?? 0;
+    final startDate = DateTime.tryParse(membershipDetails['startDate'] as String? ?? '');
+    final endDate = DateTime.tryParse(membershipDetails['endDate'] as String? ?? '');
+    final planId = planDetails['planId'] as int?;
+
+    final daysRemaining = endDate != null ? endDate.difference(DateTime.now()).inDays : 0;
+    final progressPercentage = (startDate != null && endDate != null) 
+        ? ((DateTime.now().difference(startDate).inDays / endDate.difference(startDate).inDays) * 100).clamp(0, 100)
+        : 0.0;
+
+    return InkWell(
+      onTap: () {
+        if (planId != null) {
+          _navigateToPlanDetail(planId);
+        }
+      },
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Colors.green.shade600,
+              Colors.green.shade400,
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.green.withValues(alpha: 0.3),
+              blurRadius: 15,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.card_membership,
+                    color: Colors.white,
+                    size: 28,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Active Membership',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.white70,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        planName,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(
+                  Icons.arrow_forward_ios,
+                  color: Colors.white70,
+                  size: 16,
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            
+            // Date Range
+            Row(
+              children: [
+                Expanded(
+                  child: _buildDateInfo(
+                    context,
+                    icon: Icons.play_circle_outline,
+                    label: 'Start Date',
+                    date: startDate,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _buildDateInfo(
+                    context,
+                    icon: Icons.flag_outlined,
+                    label: 'End Date',
+                    date: endDate,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            
+            // Days Remaining
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      daysRemaining > 7 
+                          ? Icons.check_circle_outline 
+                          : Icons.warning_amber_rounded,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '$daysRemaining days remaining',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+                Text(
+                  '₹$planPrice',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            
+            // Progress Bar
+            ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: LinearProgressIndicator(
+                value: progressPercentage / 100,
+                backgroundColor: Colors.white.withValues(alpha: 0.3),
+                valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                minHeight: 8,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '${progressPercentage.toStringAsFixed(0)}% completed',
+              style: const TextStyle(
+                fontSize: 12,
+                color: Colors.white70,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDateInfo(BuildContext context, {
+    required IconData icon,
+    required String label,
+    required DateTime? date,
+  }) {
+    final dateStr = date != null 
+        ? '${date.day}/${date.month}/${date.year}' 
+        : 'N/A';
+    
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.2),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: Colors.white, size: 16),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 11,
+                  color: Colors.white70,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            dateStr,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _navigateToPlanDetail(int planId) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ChangeNotifierProvider(
+          create: (_) => MembershipViewModel(),
+          child: PlanDetailScreen(planId: planId),
+        ),
       ),
     );
   }
@@ -749,7 +1002,17 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
             'title': 'Chat with Members',
             'subtitle': 'Messages',
             'color': Colors.blue,
-            'onTap': () {}, // TODO: Navigate to chat
+            'onTap': () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ChangeNotifierProvider(
+                    create: (_) => MessagesViewModel(),
+                    child: const ChatListScreen(),
+                  ),
+                ),
+              );
+            },
           },
         ];
 
@@ -821,7 +1084,17 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
             'title': 'Chat with Trainer',
             'subtitle': 'Messages',
             'color': Colors.orange,
-            'onTap': () {}, // TODO: Navigate to chat
+            'onTap': () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ChangeNotifierProvider(
+                    create: (_) => MessagesViewModel(),
+                    child: const ChatListScreen(),
+                  ),
+                ),
+              );
+            },
           },
         ];
     }

@@ -10,6 +10,7 @@ class EmployeeModel {
   final String gender;
   final String? profilePic;
   final int roleId;
+  final String roleName;
   final bool isActive;
 
   EmployeeModel({
@@ -24,6 +25,7 @@ class EmployeeModel {
     required this.gender,
     this.profilePic,
     required this.roleId,
+    required this.roleName,
     required this.isActive,
   });
 
@@ -40,6 +42,7 @@ class EmployeeModel {
       gender: json['gender'] ?? '',
       profilePic: json['profilePic'],
       roleId: json['roleId'] ?? 0,
+      roleName: json['roleName'] ?? 'unknown',
       isActive: json['isActive'] ?? true,
     );
   }
@@ -56,6 +59,7 @@ class EmployeeModel {
         'gender': gender,
         'profilePic': profilePic,
         'roleId': roleId,
+        'roleName': roleName,
         'isActive': isActive,
       };
 
@@ -76,6 +80,11 @@ class EmployeeModel {
       return names[0][0].toUpperCase();
     }
     return (names[0][0] + names[names.length - 1][0]).toUpperCase();
+  }
+
+  /// Get capitalized role name for display
+  String get displayRoleName {
+    return roleName[0].toUpperCase() + roleName.substring(1);
   }
 }
 
