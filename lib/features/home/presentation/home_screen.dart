@@ -11,6 +11,7 @@ import 'package:zymm/features/employee/presentation/viewmodel/employee_viewmodel
 import 'package:zymm/features/gym/presentation/screens/gym_detail_screen.dart';
 import 'package:zymm/features/gym/presentation/screens/search_gyms_screen.dart';
 import 'package:zymm/features/membership/presentation/screens/membership_requests_screen.dart';
+import 'package:zymm/features/membership/presentation/screens/pending_fees_screen.dart';
 import 'package:zymm/features/membership/presentation/screens/view_all_plans_screen.dart';
 import 'package:zymm/features/membership/presentation/viewmodel/membership_viewmodel.dart';
 import 'package:zymm/features/notifications/presentation/notification_center.dart';
@@ -497,7 +498,17 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
             'title': 'Pending Fees',
             'subtitle': 'Upcoming payments',
             'color': Colors.red,
-            'onTap': () {}, // TODO: Navigate to fees
+            'onTap': () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ChangeNotifierProvider(
+                    create: (_) => MembershipViewModel(),
+                    child: const PendingFeesScreen(),
+                  ),
+                ),
+              );
+            },
           },
         ];
 
@@ -612,7 +623,17 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
             'title': 'Pending Fees',
             'subtitle': 'Upcoming payments',
             'color': Colors.red,
-            'onTap': () {}, // TODO: Navigate to fees
+            'onTap': () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ChangeNotifierProvider(
+                    create: (_) => MembershipViewModel(),
+                    child: const PendingFeesScreen(),
+                  ),
+                ),
+              );
+            },
           },
         ];
 

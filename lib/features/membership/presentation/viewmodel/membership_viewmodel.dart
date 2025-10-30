@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:zymm/features/membership/data/models/membership_model.dart';
 import 'package:zymm/features/membership/data/models/membership_request_model.dart';
+import 'package:zymm/features/membership/data/models/pending_fees_model.dart';
 import 'package:zymm/features/membership/data/models/plan_history_model.dart';
 import 'package:zymm/features/membership/data/models/plan_model.dart';
 import 'package:zymm/features/membership/data/models/upsert_plan_request_model.dart';
@@ -25,6 +26,9 @@ class MembershipViewModel extends ChangeNotifier {
 
   List<MembershipModel> _memberships = [];
   List<MembershipModel> get memberships => _memberships;
+
+  List<PendingFeesModel> _pendingFeesMembers = [];
+  List<PendingFeesModel> get pendingFeesMembers => _pendingFeesMembers;
 
   PlanHistoryModel? _pendingPlanRequest;
   PlanHistoryModel? get pendingPlanRequest => _pendingPlanRequest;
@@ -430,6 +434,70 @@ class MembershipViewModel extends ChangeNotifier {
           final updatedPlan = _plans[index].copyWith(isActive: true);
           _plans = List.from(_plans)..[index] = updatedPlan;
         }
+        _state = MembershipViewState.success;
+        notifyListeners();
+        return true;
+      }
+    } catch (e) {
+      _state = MembershipViewState.error;
+      _errorMessage = 'Error: ${e.toString()}';
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// Get members with pending fees (owners/managers only)
+  Future<void> getMembersWithPendingFees() async {
+    _state = MembershipViewState.loading;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final response = await _repository.getMembersWithPendingFees();
+
+      if (response.hasError) {
+        final errorMsg = response.error?.toLowerCase() ?? '';
+        if (errorMsg.contains('no members')) {
+          _pendingFeesMembers = [];
+          _state = MembershipViewState.success;
+        } else {
+          _state = MembershipViewState.error;
+          _errorMessage = response.error ?? 'Failed to fetch pending fees';
+        }
+      } else {
+        if (response.data == null) {
+          _pendingFeesMembers = [];
+        } else if (response.data is List) {
+          final List<dynamic> data = response.data as List<dynamic>;
+          _pendingFeesMembers = data.map((json) => PendingFeesModel.fromJson(json)).toList();
+        } else {
+          _pendingFeesMembers = [];
+        }
+        _state = MembershipViewState.success;
+      }
+    } catch (e) {
+      _state = MembershipViewState.error;
+      _errorMessage = 'Error: ${e.toString()}';
+    } finally {
+      notifyListeners();
+    }
+  }
+
+  /// Send fee reminders to specified users
+  Future<bool> sendFeeReminders(List<int> userIds) async {
+    _state = MembershipViewState.submitting;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final response = await _repository.sendFeeReminders(userIds);
+
+      if (response.hasError) {
+        _state = MembershipViewState.error;
+        _errorMessage = response.error ?? 'Failed to send fee reminders';
+        notifyListeners();
+        return false;
+      } else {
         _state = MembershipViewState.success;
         notifyListeners();
         return true;

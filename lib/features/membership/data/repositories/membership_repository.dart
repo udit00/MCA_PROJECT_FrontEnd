@@ -78,5 +78,21 @@ class MembershipRepository {
     });
     return CommonApiResponse.fromJson(response);
   }
+
+  /// Get members with pending fees (expired or expiring within 10 days)
+  /// For owners/managers only
+  Future<CommonApiResponse> getMembersWithPendingFees() async {
+    final response = await _apiService.get('membership/getMembersWithPendingFees');
+    return CommonApiResponse.fromJson(response);
+  }
+
+  /// Send fee reminder notifications to specified users
+  /// For owners/managers only
+  Future<CommonApiResponse> sendFeeReminders(List<int> userIds) async {
+    final response = await _apiService.post('membership/sendFeeReminders', {
+      'userIds': userIds,
+    });
+    return CommonApiResponse.fromJson(response);
+  }
 }
 
