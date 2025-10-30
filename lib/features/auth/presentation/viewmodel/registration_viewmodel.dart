@@ -4,6 +4,7 @@ import 'package:zymm/core/network/network_info.dart';
 import 'package:zymm/features/auth/data/models/registration_request_model.dart';
 import 'package:zymm/features/auth/data/models/registration_response_model.dart';
 import 'package:zymm/features/auth/data/repositories/auth_repository_impl.dart';
+import 'package:zymm/utils/app_info.dart';
 
 enum ViewState { idle, loading, success, error }
 
@@ -65,6 +66,8 @@ class RegistrationViewModel extends ChangeNotifier {
         locationLat: locationLat,
         locationLong: locationLong,
         ipAddress: await NetworkInfo.getLocalIpAddress(),
+        appVersion: AppInfo().version,
+        userAgent: AppInfo().platform,
       );
 
       final response = await _repository.register(request);

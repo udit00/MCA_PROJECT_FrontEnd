@@ -4,6 +4,7 @@ import 'package:zymm/core/network/network_info.dart';
 import 'package:zymm/features/auth/data/models/owner_registration_request_model.dart';
 import 'package:zymm/features/auth/data/models/registration_response_model.dart';
 import 'package:zymm/features/auth/data/repositories/auth_repository_impl.dart';
+import 'package:zymm/utils/app_info.dart';
 
 enum ViewState { idle, loading, success, error }
 
@@ -102,6 +103,8 @@ class OwnerRegistrationViewModel extends ChangeNotifier {
         gymOfficialLocationLat: gymOfficialLocationLat,
         gymOfficialLocationLong: gymOfficialLocationLong,
         ipAddress: await NetworkInfo.getLocalIpAddress(),
+        userAgent: AppInfo().platform,
+        appVersion: AppInfo().version,
       );
 
       final response = await _repository.registerOwner(request);

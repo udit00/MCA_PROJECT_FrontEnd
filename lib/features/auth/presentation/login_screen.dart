@@ -162,7 +162,6 @@ class _LoginScreenState extends State<LoginScreen> {
                             : () async {
                                 // Get user location - required for login
                                 final location = await LocationService.instance.getLocationWithErrorHandling(context);
-                                
                                 if (location != null && mounted) {
                                   loginVM.login(
                                     _usernameController.text,

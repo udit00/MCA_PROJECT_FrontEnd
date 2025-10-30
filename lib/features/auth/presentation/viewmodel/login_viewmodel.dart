@@ -4,6 +4,7 @@ import 'package:zymm/core/network/network_info.dart';
 import 'package:zymm/features/auth/data/models/login_request_model.dart';
 import 'package:zymm/features/auth/data/models/login_response_model.dart';
 import 'package:zymm/features/auth/data/repositories/auth_repository_impl.dart';
+import 'package:zymm/utils/app_info.dart';
 
 enum ViewState { idle, loading, success, error }
 
@@ -39,6 +40,9 @@ class LoginViewModel extends ChangeNotifier {
         locationLat: locationLat,
         locationLong: locationLong,
         ipAddress: await NetworkInfo.getLocalIpAddress(),
+        appVersion: AppInfo().version,
+        platform: AppInfo().platform,
+        userAgent: AppInfo().platform,
       );
       final response = await _repository.login(request);
       if (response.hasError) {

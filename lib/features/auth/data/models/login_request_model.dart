@@ -12,12 +12,12 @@ class LoginRequestModel {
   LoginRequestModel({
     required this.emailOrMobile,
     required this.password,
-    this.appVersion = "0.0.1",
-    this.userAgent = "Android",
-    this.locationLat = "",
-    this.locationLong = "",
-    this.ipAddress = "",
-    this.platform = "Android",
+    required this.appVersion,
+    required this.userAgent,
+    required this.locationLat,
+    required this.locationLong,
+    required this.ipAddress,
+    required this.platform,
   });
 
   Map<String, dynamic> toJson() => {

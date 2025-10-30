@@ -5,6 +5,9 @@ import 'package:zymm/common/enums/user_role.dart';
 import 'package:zymm/core/storage/storage_service.dart';
 import 'package:zymm/features/attendance/presentation/attendance_screen.dart';
 import 'package:zymm/features/attendance/presentation/viewmodel/attendance_viewmodel.dart';
+import 'package:zymm/features/employee/presentation/screens/manage_employees_screen.dart';
+import 'package:zymm/features/employee/presentation/viewmodel/employee_viewmodel.dart';
+import 'package:zymm/features/gym/presentation/screens/gym_detail_screen.dart';
 import 'package:zymm/features/gym/presentation/screens/search_gyms_screen.dart';
 import 'package:zymm/features/membership/presentation/screens/membership_requests_screen.dart';
 import 'package:zymm/features/membership/presentation/screens/view_all_plans_screen.dart';
@@ -22,14 +25,7 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.dark,
-        statusBarBrightness: Brightness.light,
-      ),
-      child: Scaffold(
-        backgroundColor: Colors.grey[50],
+    return Scaffold(
         appBar: AppBar(
           title: const Text(
             'ZYMM',
@@ -40,8 +36,17 @@ class HomeScreen extends StatelessWidget {
           ),
           centerTitle: true,
           elevation: 0,
-          backgroundColor: Colors.transparent,
-          foregroundColor: Theme.of(context).primaryColor,
+          leading: IconButton(
+            icon: const Icon(Icons.person_outline),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ProfileScreen(),
+                ),
+              );
+            },
+          ),
           actions: [
             // Notification Icon with Badge
             Consumer<NotificationViewModel>(
@@ -94,17 +99,6 @@ class HomeScreen extends StatelessWidget {
                 );
               },
             ),
-            IconButton(
-              icon: const Icon(Icons.person_outline),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const ProfileScreen(),
-                  ),
-                );
-              },
-            ),
           ],
         ),
         body: SafeArea(
@@ -140,8 +134,7 @@ class HomeScreen extends StatelessWidget {
             ),
           ),
         ),
-      ),
-    );
+      );
   }
 
   Widget _buildRoleBadge(BuildContext context) {
@@ -320,7 +313,27 @@ class HomeScreen extends StatelessWidget {
             'title': 'Manage Employees',
             'subtitle': 'Staff & trainers',
             'color': Colors.purple,
-            'onTap': () {}, // TODO: Navigate to employees
+            'onTap': () async {
+              final gymId = await StorageService.instance.getGymId();
+              if (gymId != null && context.mounted) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ChangeNotifierProvider(
+                      create: (_) => EmployeeViewModel(),
+                      child: ManageEmployeesScreen(gymId: gymId),
+                    ),
+                  ),
+                );
+              } else if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Gym ID not found. Please try again.'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            },
           },
           {
             'icon': Icons.pending_actions,
@@ -415,7 +428,27 @@ class HomeScreen extends StatelessWidget {
             'title': 'Manage Employees',
             'subtitle': 'Staff & trainers',
             'color': Colors.purple,
-            'onTap': () {}, // TODO: Navigate to employees
+            'onTap': () async {
+              final gymId = await StorageService.instance.getGymId();
+              if (gymId != null && context.mounted) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ChangeNotifierProvider(
+                      create: (_) => EmployeeViewModel(),
+                      child: ManageEmployeesScreen(gymId: gymId),
+                    ),
+                  ),
+                );
+              } else if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Gym ID not found. Please try again.'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            },
           },
           {
             'icon': Icons.pending_actions,
@@ -537,7 +570,27 @@ class HomeScreen extends StatelessWidget {
             'title': 'Current Gym',
             'subtitle': 'My gym details',
             'color': Colors.blue,
-            'onTap': () {      },
+            'onTap': () async {
+              final gymId = await StorageService.instance.getGymId();
+              if (gymId != null && context.mounted) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ChangeNotifierProvider(
+                      create: (_) => GymViewModel(),
+                      child: GymDetailScreen(gymId: gymId),
+                    ),
+                  ),
+                );
+              } else if (context.mounted){
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Gym ID not found. Please try again.'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            },
           },
           {
             'icon': Icons.search,
@@ -576,6 +629,7 @@ class HomeScreen extends StatelessWidget {
     required VoidCallback onTap,
   }) {
     return Container(
+      alignment: Alignment.center,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -611,6 +665,7 @@ class HomeScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 Text(
+                  textAlign: TextAlign.center,
                   title,
                   style: TextStyle(
                     fontSize: 16,
