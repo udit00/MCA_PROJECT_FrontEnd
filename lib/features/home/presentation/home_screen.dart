@@ -408,13 +408,32 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
     switch (widget.userRole) {
       case UserRole.owner:
         return [
-          // TODO: Add conditional logic for Manage gyms vs Gym card based on gym count
           {
             'icon': Icons.business,
-            'title': 'Manage Gyms',
-            'subtitle': 'View all gyms',
+            'title': 'Manage Gym',
+            'subtitle': 'Gym details & settings',
             'color': Colors.blue,
-            'onTap': () {}, // TODO: Navigate to manage gyms
+            'onTap': () async {
+              final gymId = await StorageService.instance.getGymId();
+              if (gymId != null && context.mounted) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ChangeNotifierProvider(
+                      create: (_) => GymViewModel(),
+                      child: GymDetailScreen(gymId: gymId, isManaging: true),
+                    ),
+                  ),
+                );
+              } else if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Gym ID not found. Please try again.'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            },
           },
           {
             'icon': Icons.badge,
@@ -543,13 +562,32 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
               );
             },
           },
-          // TODO: Add conditional logic for Manage gyms vs Gym card based on gym count
           {
             'icon': Icons.business,
-            'title': 'Manage Gyms',
-            'subtitle': 'View all gyms',
+            'title': 'Manage Gym',
+            'subtitle': 'Gym details & settings',
             'color': Colors.blue,
-            'onTap': () {}, // TODO: Navigate to manage gyms
+            'onTap': () async {
+              final gymId = await StorageService.instance.getGymId();
+              if (gymId != null && context.mounted) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ChangeNotifierProvider(
+                      create: (_) => GymViewModel(),
+                      child: GymDetailScreen(gymId: gymId, isManaging: true),
+                    ),
+                  ),
+                );
+              } else if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Gym ID not found. Please try again.'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            },
           },
           {
             'icon': Icons.badge,

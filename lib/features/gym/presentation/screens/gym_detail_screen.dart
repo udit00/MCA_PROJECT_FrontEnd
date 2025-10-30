@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:zymm/features/feedback/presentation/screens/all_feedbacks_screen.dart';
 import 'package:zymm/features/feedback/presentation/screens/create_feedback_screen.dart';
+import 'package:zymm/features/gym/presentation/screens/edit_gym_screen.dart';
 import 'package:zymm/features/gym/presentation/viewmodel/gym_viewmodel.dart';
 import 'package:zymm/features/membership/presentation/screens/view_all_plans_screen.dart';
 
@@ -11,8 +12,13 @@ import '../../../membership/presentation/viewmodel/membership_viewmodel.dart';
 
 class GymDetailScreen extends StatefulWidget {
   final int gymId;
+  final bool isManaging; // true if owner/manager is viewing their own gym
 
-  const GymDetailScreen({super.key, required this.gymId});
+  const GymDetailScreen({
+    super.key,
+    required this.gymId,
+    this.isManaging = false,
+  });
 
   @override
   State<GymDetailScreen> createState() => _GymDetailScreenState();
@@ -221,85 +227,129 @@ class _GymDetailScreenState extends State<GymDetailScreen> {
                       padding: const EdgeInsets.all(20),
                       child: Column(
                         children: [
-                          SizedBox(
-                            width: double.infinity,
-                            height: 56,
-                            child: ElevatedButton.icon(
-                              onPressed: () async {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => ChangeNotifierProvider(
-                                      create: (_) => MembershipViewModel(),
-                                      child: ViewAllPlansScreen(
-                                        gymId: gym.gymId,
-                                        gymName: gym.gymName,
+                          // Show different buttons based on whether user is managing
+                          if (widget.isManaging) ...[
+                            // Edit Gym Button (for owners/managers)
+                            SizedBox(
+                              width: double.infinity,
+                              height: 56,
+                              child: ElevatedButton.icon(
+                                onPressed: () async {
+                                  // Navigate to Edit Gym Screen
+                                  final result = await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => ChangeNotifierProvider(
+                                        create: (_) => GymViewModel(),
+                                        child: EditGymScreen(gymId: gym.gymId),
                                       ),
                                     ),
+                                  );
+                                  // Refresh gym data if changes were made
+                                  if (result == true && mounted) {
+                                    context.read<GymViewModel>().getGymById(widget.gymId);
+                                  }
+                                },
+                                icon: const Icon(Icons.edit, color: Colors.white),
+                                label: const Text(
+                                  'Edit Gym Details',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
                                   ),
-                                );
-                              },
-                              icon: const Icon(Icons.card_membership, color: Colors.white),
-                              label: const Text(
-                                'View Membership Plans',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
                                 ),
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.blue,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.blue,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                          const SizedBox(height: 12),
-
-                          // Rate This Gym Button
-                          SizedBox(
-                            width: double.infinity,
-                            height: 56,
-                            child: ElevatedButton.icon(
-                              onPressed: () async {
-                                final result = await Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => ChangeNotifierProvider(
-                                      create: (_) => FeedbackViewModel(),
-                                      child: CreateFeedbackScreen(
-                                        gymId: gym.gymId,
+                            const SizedBox(height: 12),
+                          ] else ...[
+                            // View Membership Plans (for members)
+                            SizedBox(
+                              width: double.infinity,
+                              height: 56,
+                              child: ElevatedButton.icon(
+                                onPressed: () async {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => ChangeNotifierProvider(
+                                        create: (_) => MembershipViewModel(),
+                                        child: ViewAllPlansScreen(
+                                          gymId: gym.gymId,
+                                          gymName: gym.gymName,
+                                        ),
                                       ),
                                     ),
+                                  );
+                                },
+                                icon: const Icon(Icons.card_membership, color: Colors.white),
+                                label: const Text(
+                                  'View Membership Plans',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
                                   ),
-                                );
-                                // Refresh gym data if feedback was submitted
-                                if (result == true && mounted) {
-                                  context.read<GymViewModel>().getGymById(widget.gymId);
-                                }
-                              },
-                              icon: const Icon(Icons.star, color: Colors.white),
-                              label: const Text(
-                                'Rate This Gym',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
                                 ),
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.amber,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.blue,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                          const SizedBox(height: 12),
+                            const SizedBox(height: 12),
 
-                          // View All Reviews Button
+                            // Rate This Gym Button (for members)
+                            SizedBox(
+                              width: double.infinity,
+                              height: 56,
+                              child: ElevatedButton.icon(
+                                onPressed: () async {
+                                  final result = await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => ChangeNotifierProvider(
+                                        create: (_) => FeedbackViewModel(),
+                                        child: CreateFeedbackScreen(
+                                          gymId: gym.gymId,
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                  // Refresh gym data if feedback was submitted
+                                  if (result == true && mounted) {
+                                    context.read<GymViewModel>().getGymById(widget.gymId);
+                                  }
+                                },
+                                icon: const Icon(Icons.star, color: Colors.white),
+                                label: const Text(
+                                  'Rate This Gym',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.amber,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                          ],
+
+                          // View All Reviews Button (for both)
                           SizedBox(
                             width: double.infinity,
                             height: 56,

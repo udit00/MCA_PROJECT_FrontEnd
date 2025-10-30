@@ -19,5 +19,12 @@ class GymRepository {
     final response = await _apiService.get('gym/getGymData?gymId=$gymId');
     return CommonApiResponse.fromJson(response);
   }
+
+  /// Update gym details (only gym information, not owner)
+  /// For owners/managers only
+  Future<CommonApiResponse> updateGym(Map<String, dynamic> gymData) async {
+    final response = await _apiService.post('gym/updateGym', gymData);
+    return CommonApiResponse.fromJson(response);
+  }
 }
 

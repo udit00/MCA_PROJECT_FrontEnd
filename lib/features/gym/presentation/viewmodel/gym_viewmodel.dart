@@ -119,5 +119,32 @@ class GymViewModel extends ChangeNotifier {
   List<String> get uniqueStates {
     return _gyms.map((gym) => gym.state).toSet().toList()..sort();
   }
+
+  /// Update gym details
+  Future<bool> updateGym(Map<String, dynamic> gymData) async {
+    _state = GymViewState.loading;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final response = await _repository.updateGym(gymData);
+
+      if (response.hasError) {
+        _state = GymViewState.error;
+        _errorMessage = response.error ?? 'Failed to update gym';
+        notifyListeners();
+        return false;
+      } else {
+        _state = GymViewState.success;
+        notifyListeners();
+        return true;
+      }
+    } catch (e) {
+      _state = GymViewState.error;
+      _errorMessage = 'Error: ${e.toString()}';
+      notifyListeners();
+      return false;
+    }
+  }
 }
 
