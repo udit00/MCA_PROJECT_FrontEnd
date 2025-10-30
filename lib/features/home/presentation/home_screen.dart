@@ -15,6 +15,7 @@ import 'package:zymm/features/membership/presentation/screens/view_all_plans_scr
 import 'package:zymm/features/membership/presentation/viewmodel/membership_viewmodel.dart';
 import 'package:zymm/features/notifications/presentation/notification_center.dart';
 import 'package:zymm/features/notifications/presentation/viewmodel/notification_viewmodel.dart';
+import 'package:zymm/features/onboarding/presentation/onboarding_screen.dart';
 import 'package:zymm/features/user/presentation/screens/profile_screen.dart';
 import 'package:zymm/features/user/data/models/self_data_model.dart';
 import 'package:zymm/features/user/data/repositories/user_repository.dart';
@@ -93,11 +94,16 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
         developer.log('✅ HomeScreen: State updated with new user data');
       }
     } catch (e) {
+      await StorageService.instance.clearAllOnLogout();
       developer.log('❌ HomeScreen: Error fetching user data: $e');
       if (mounted) {
         setState(() {
           _isLoadingUserData = false;
         });
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const OnboardingScreen()),
+              (route) => false,
+        );
       }
     }
   }

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:dio/dio.dart';
 import 'package:http/http.dart' as http;
 import 'package:zymm/common/models/common_api_response_model.dart';
 import 'package:zymm/core/network/api_service.dart';
@@ -18,9 +19,13 @@ class UserRepository {
   }
 
   Future<SelfDataModel> getSelfDataParsed() async {
-    final response = await _apiService.get('user/selfData');
-    final apiResponse = CommonApiResponse.fromJson(response);
-    return SelfDataModel.fromJson(apiResponse.data);
+    try {
+      final response = await _apiService.get('user/selfData');
+      final apiResponse = CommonApiResponse.fromJson(response);
+      return SelfDataModel.fromJson(apiResponse.data);
+    } on DioException {
+      rethrow;
+    }
   }
 
   Future<ChangePasswordResponseModel> changePassword({

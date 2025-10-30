@@ -1,9 +1,11 @@
+import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:zymm/features/employee/data/models/employee_model.dart';
 import 'package:zymm/features/employee/presentation/screens/employee_detail_screen.dart';
 import 'package:zymm/features/employee/presentation/screens/register_employee_screen.dart';
 import 'package:zymm/features/employee/presentation/viewmodel/employee_viewmodel.dart';
+import 'package:zymm/features/home/presentation/home_screen.dart';
 
 class ManageEmployeesScreen extends StatefulWidget {
   final int gymId;
@@ -19,13 +21,42 @@ class ManageEmployeesScreen extends StatefulWidget {
   State<ManageEmployeesScreen> createState() => _ManageEmployeesScreenState();
 }
 
-class _ManageEmployeesScreenState extends State<ManageEmployeesScreen> {
+class _ManageEmployeesScreenState extends State<ManageEmployeesScreen> with RouteAware {
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<EmployeeViewModel>().getAllEmployeesByGymId(widget.gymId);
+      _fetchEmployees();
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Subscribe to route changes
+    final route = ModalRoute.of(context);
+    if (route is PageRoute) {
+      homeScreenRouteObserver.subscribe(this, route);
+    }
+  }
+
+  @override
+  void dispose() {
+    homeScreenRouteObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  @override
+  void didPopNext() {
+    // Called when coming back to this screen
+    developer.log('🔄 ManageEmployeesScreen: didPopNext - Refetching employees');
+    _fetchEmployees();
+  }
+
+  Future<void> _fetchEmployees() async {
+    if (mounted) {
+      await context.read<EmployeeViewModel>().getAllEmployeesByGymId(widget.gymId);
+    }
   }
 
   @override
@@ -58,8 +89,7 @@ class _ManageEmployeesScreenState extends State<ManageEmployeesScreen> {
                   ),
                   const SizedBox(height: 16),
                   ElevatedButton.icon(
-                    onPressed: () =>
-                        viewModel.getAllEmployeesByGymId(widget.gymId),
+                    onPressed: _fetchEmployees,
                     icon: const Icon(Icons.refresh),
                     label: const Text('Retry'),
                   ),
@@ -101,7 +131,7 @@ class _ManageEmployeesScreenState extends State<ManageEmployeesScreen> {
           }
 
           return RefreshIndicator(
-            onRefresh: () => viewModel.getAllEmployeesByGymId(widget.gymId),
+            onRefresh: _fetchEmployees,
             child: ListView.builder(
               padding: const EdgeInsets.all(16),
               itemCount: viewModel.employees.length,
@@ -131,12 +161,8 @@ class _ManageEmployeesScreenState extends State<ManageEmployeesScreen> {
       MaterialPageRoute(
         builder: (context) => const RegisterEmployeeScreen(),
       ),
-    ).then((_) {
-      // Reload employees after returning
-      if (mounted) {
-        context.read<EmployeeViewModel>().getAllEmployeesByGymId(widget.gymId);
-      }
-    });
+    );
+    // Note: Employees will automatically refresh via RouteAware.didPopNext()
   }
 
   void _navigateToEmployeeDetail(int employeeId) {
