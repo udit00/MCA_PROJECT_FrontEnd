@@ -256,32 +256,38 @@ class _RegisterEmployeeScreenState extends State<RegisterEmployeeScreen> {
                               ? null
                               : () async {
                                   if (_formKey.currentState!.validate()) {
-                                    // Get user location - required for registration
+                                    employeeVM.startEmployeeRegistrationProcess();
                                     final location = await LocationService.instance.getLocationWithErrorHandling(context);
-                                    
-                                    if (location != null && mounted) {
-                                      // Get IP address
+                                    if (!mounted) {
+                                      employeeVM.resetState();
+                                      return;
+                                    }
+
+                                    if (location != null) {
                                       final ipAddress = await NetworkInfo.getLocalIpAddress();
-                                      
-                                      // Get device platform
-                                      final userAgent = Platform.isAndroid ? 'Android' : 
-                                                       Platform.isIOS ? 'iOS' : 
-                                                       Platform.isLinux ? 'Linux' : 
-                                                       Platform.isWindows ? 'Windows' : 
-                                                       Platform.isMacOS ? 'MacOS' : 'Unknown';
-                                      
-                                      // App version - you can get this from package_info_plus if needed
-                                      // For now using a placeholder that should be updated
+
+                                      final userAgent = Platform.isAndroid
+                                          ? 'Android'
+                                          : Platform.isIOS
+                                              ? 'iOS'
+                                              : Platform.isLinux
+                                                  ? 'Linux'
+                                                  : Platform.isWindows
+                                                      ? 'Windows'
+                                                      : Platform.isMacOS
+                                                          ? 'MacOS'
+                                                          : 'Unknown';
+
                                       const appVersion = '1.0.0';
-                                      
+
                                       await employeeVM.createEmployee(
                                         displayName: _displayNameController.text.trim(),
                                         mobile: _mobileController.text.trim(),
                                         password: _passwordController.text,
                                         gender: _selectedGender,
                                         roleId: _selectedRoleId,
-                                        email: _emailController.text.trim().isNotEmpty 
-                                            ? _emailController.text.trim() 
+                                        email: _emailController.text.trim().isNotEmpty
+                                            ? _emailController.text.trim()
                                             : null,
                                         locationLat: double.parse(location.latitude),
                                         locationLong: double.parse(location.longitude),
@@ -289,6 +295,8 @@ class _RegisterEmployeeScreenState extends State<RegisterEmployeeScreen> {
                                         userAgent: userAgent,
                                         ipAddress: ipAddress,
                                       );
+                                    } else {
+                                      employeeVM.resetState();
                                     }
                                   }
                                 },

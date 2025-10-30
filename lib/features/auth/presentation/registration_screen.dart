@@ -260,10 +260,13 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                             ? null
                             : () async {
                                 if (_formKey.currentState!.validate()) {
-                                  // Get user location - required for registration
+                                  registrationVM.startRegistrationProcess();
                                   final location = await LocationService.instance.getLocationWithErrorHandling(context);
-                                  
-                                  if (location != null && mounted) {
+                                  if (!mounted) {
+                                    registrationVM.resetState();
+                                    return;
+                                  }
+                                  if (location != null) {
                                     registrationVM.register(
                                       displayName: _displayNameController.text.trim(),
                                       mobile: _mobileController.text.trim(),
@@ -275,6 +278,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                                       locationLat: location.latitude,
                                       locationLong: location.longitude,
                                     );
+                                  } else {
+                                    registrationVM.resetState();
                                   }
                                 }
                               },

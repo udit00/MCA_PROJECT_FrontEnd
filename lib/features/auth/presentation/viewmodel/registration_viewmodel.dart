@@ -20,6 +20,11 @@ class RegistrationViewModel extends ChangeNotifier {
   RegistrationResponseModel? _registrationResponse;
   RegistrationResponseModel? get registrationResponse => _registrationResponse;
 
+  void startRegistrationProcess() {
+    _state = ViewState.loading;
+    notifyListeners();
+  }
+
   Future<void> register({
     required String displayName,
     required String mobile,
@@ -108,7 +113,7 @@ class RegistrationViewModel extends ChangeNotifier {
   /// Reset the viewmodel state to idle
   void resetState() {
     _state = ViewState.idle;
-    _errorMessage = null;
+    // _errorMessage = null;
     _registrationResponse = null;
     notifyListeners();
   }

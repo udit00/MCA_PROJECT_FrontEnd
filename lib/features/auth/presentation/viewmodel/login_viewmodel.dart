@@ -22,6 +22,11 @@ class LoginViewModel extends ChangeNotifier {
 
 
 
+  void startLoginProcess() {
+    _state = ViewState.loading;
+    notifyListeners();
+  }
+
   Future<void> login(String emailOrMobile, String password, {String locationLat = "", String locationLong = ""}) async {
     if (emailOrMobile.isEmpty || password.isEmpty) {
       _state = ViewState.error;
@@ -78,7 +83,7 @@ class LoginViewModel extends ChangeNotifier {
   /// Reset the viewmodel state to idle
   void resetState() {
     _state = ViewState.idle;
-    _errorMessage = null;
+    // _errorMessage = null;
     _loginResponse = null;
     notifyListeners();
   }

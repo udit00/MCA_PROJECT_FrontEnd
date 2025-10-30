@@ -17,6 +17,11 @@ class EmployeeRegistrationViewModel extends ChangeNotifier {
   EmployeeRegistrationResponseModel? _registrationResponse;
   EmployeeRegistrationResponseModel? get registrationResponse => _registrationResponse;
 
+  void startEmployeeRegistrationProcess() {
+    _state = ViewState.loading;
+    notifyListeners();
+  }
+
   Future<void> createEmployee({
     String? displayPic,
     required String displayName,
@@ -64,7 +69,7 @@ class EmployeeRegistrationViewModel extends ChangeNotifier {
 
   void resetState() {
     _state = ViewState.idle;
-    _errorMessage = null;
+    // _errorMessage = null;
     _registrationResponse = null;
     notifyListeners();
   }

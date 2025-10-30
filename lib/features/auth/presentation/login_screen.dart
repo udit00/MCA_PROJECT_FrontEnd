@@ -160,15 +160,21 @@ class _LoginScreenState extends State<LoginScreen> {
                         onPressed: loginVM.state == ViewState.loading
                             ? null
                             : () async {
+                                loginVM.startLoginProcess();
                                 // Get user location - required for login
                                 final location = await LocationService.instance.getLocationWithErrorHandling(context);
-                                if (location != null && mounted) {
+                                if (!mounted) {
+                                  return;
+                                }
+                                if (location != null) {
                                   loginVM.login(
                                     _usernameController.text,
                                     _passwordController.text,
                                     locationLat: location.latitude,
                                     locationLong: location.longitude,
                                   );
+                                } else {
+                                  loginVM.resetState();
                                 }
                               },
                         style: ElevatedButton.styleFrom(
