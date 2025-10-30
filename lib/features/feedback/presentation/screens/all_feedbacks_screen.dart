@@ -112,12 +112,18 @@ class _AllFeedbacksScreenState extends State<AllFeedbacksScreen> {
                             return FeedbackCard(
                               feedback: feedback,
                               onTap: () {
+
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => FeedbackDetailScreen(
-                                      feedbackId: feedback.feedbackId,
+                                    builder: (context) => ChangeNotifierProvider(
+                                      create: (_) => FeedbackViewModel(),
+                                      child: FeedbackDetailScreen(
+                                        feedbackId: feedback.feedbackId,
+                                      ),
                                     ),
+
+
                                   ),
                                 );
                               },

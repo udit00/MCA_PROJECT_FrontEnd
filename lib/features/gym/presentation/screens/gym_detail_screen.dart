@@ -6,6 +6,9 @@ import 'package:zymm/features/feedback/presentation/screens/create_feedback_scre
 import 'package:zymm/features/gym/presentation/viewmodel/gym_viewmodel.dart';
 import 'package:zymm/features/membership/presentation/screens/view_all_plans_screen.dart';
 
+import '../../../feedback/presentation/viewmodel/feedback_viewmodel.dart';
+import '../../../membership/presentation/viewmodel/membership_viewmodel.dart';
+
 class GymDetailScreen extends StatefulWidget {
   final int gymId;
 
@@ -218,18 +221,20 @@ class _GymDetailScreenState extends State<GymDetailScreen> {
                       padding: const EdgeInsets.all(20),
                       child: Column(
                         children: [
-                          // View Plans Button
                           SizedBox(
                             width: double.infinity,
                             height: 56,
                             child: ElevatedButton.icon(
-                              onPressed: () {
+                              onPressed: () async {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => ViewAllPlansScreen(
-                                      gymId: gym.gymId,
-                                      gymName: gym.gymName,
+                                    builder: (context) => ChangeNotifierProvider(
+                                      create: (_) => MembershipViewModel(),
+                                      child: ViewAllPlansScreen(
+                                        gymId: gym.gymId,
+                                        gymName: gym.gymName,
+                                      ),
                                     ),
                                   ),
                                 );
@@ -262,12 +267,14 @@ class _GymDetailScreenState extends State<GymDetailScreen> {
                                 final result = await Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => CreateFeedbackScreen(
-                                      gymId: gym.gymId,
+                                    builder: (context) => ChangeNotifierProvider(
+                                      create: (_) => FeedbackViewModel(),
+                                      child: CreateFeedbackScreen(
+                                        gymId: gym.gymId,
+                                      ),
                                     ),
                                   ),
                                 );
-                                
                                 // Refresh gym data if feedback was submitted
                                 if (result == true && mounted) {
                                   context.read<GymViewModel>().getGymById(widget.gymId);
@@ -297,13 +304,16 @@ class _GymDetailScreenState extends State<GymDetailScreen> {
                             width: double.infinity,
                             height: 56,
                             child: OutlinedButton.icon(
-                              onPressed: () {
+                              onPressed: () async {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => AllFeedbacksScreen(
-                                      gymId: gym.gymId,
-                                      gymName: gym.gymName,
+                                    builder: (context) => ChangeNotifierProvider(
+                                      create: (_) => FeedbackViewModel(),
+                                      child: AllFeedbacksScreen(
+                                        gymId: gym.gymId,
+                                        gymName: gym.gymName,
+                                      ),
                                     ),
                                   ),
                                 );

@@ -175,11 +175,14 @@ class _SearchGymsScreenState extends State<SearchGymsScreen> {
                       final gym = viewModel.gyms[index];
                       return GymCard(
                         gym: gym,
-                        onTap: () {
+                        onTap: () async {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => GymDetailScreen(gymId: gym.gymId),
+                              builder: (context) => ChangeNotifierProvider(
+                                create: (_) => GymViewModel(),
+                                child: GymDetailScreen(gymId: gym.gymId),
+                              ),
                             ),
                           );
                         },
