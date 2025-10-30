@@ -29,6 +29,8 @@ class GreetingViewModel extends ChangeNotifier {
     try {
       final response = await _repository.getSelfData();
       if (response.hasError) {
+        // Clear all storage and mark as error
+        await StorageService.instance.clearAllOnLogout();
         _state = GreetingState.error;
         _errorMessage = response.error ?? 'An unknown error occurred.';
       } else {
@@ -49,6 +51,8 @@ class GreetingViewModel extends ChangeNotifier {
         _state = GreetingState.success;
       }
     } catch (e) {
+      // Clear all storage on any exception
+      await StorageService.instance.clearAllOnLogout();
       _state = GreetingState.error;
       _errorMessage = e.toString();
     } finally {

@@ -63,138 +63,154 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 physics: const AlwaysScrollableScrollPhysics(),
                 child: Column(
                   children: [
-                    // Profile Header with Avatar
-                    Container(
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            Theme.of(context).primaryColor,
-                            Theme.of(context).primaryColor.withOpacity(0.8),
-                          ],
+                    // Profile Header with Background Image
+                    Stack(
+                      children: [
+                        // Background Image or Gradient
+                        Container(
+                          width: double.infinity,
+                          height: 250,
+                          decoration: BoxDecoration(
+                            gradient: userData.profilePic == null
+                                ? LinearGradient(
+                                    begin: Alignment.topCenter,
+                                    end: Alignment.bottomCenter,
+                                    colors: [
+                                      Theme.of(context).primaryColor,
+                                      Theme.of(context).primaryColor.withOpacity(0.8),
+                                    ],
+                                  )
+                                : null,
+                          ),
+                          child: userData.profilePic != null
+                              ? Stack(
+                                  fit: StackFit.expand,
+                                  children: [
+                                    Image.network(
+                                      ImageUrlHelper.getFullImageUrl(userData.profilePic),
+                                      fit: BoxFit.cover,
+                                      filterQuality: FilterQuality.high,
+                                      errorBuilder: (context, error, stackTrace) =>
+                                          Container(
+                                            decoration: BoxDecoration(
+                                              gradient: LinearGradient(
+                                                begin: Alignment.topCenter,
+                                                end: Alignment.bottomCenter,
+                                                colors: [
+                                                  Theme.of(context).primaryColor,
+                                                  Theme.of(context).primaryColor.withOpacity(0.8),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                    ),
+                                    // Dark overlay for better text readability
+                                    Container(
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          begin: Alignment.topCenter,
+                                          end: Alignment.bottomCenter,
+                                          colors: [
+                                            Colors.black.withOpacity(0.3),
+                                            Colors.black.withOpacity(0.6),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                )
+                              : null,
                         ),
-                      ),
-                      child: Column(
-                        children: [
-                          const SizedBox(height: 24),
-                          // Profile Picture with Edit Option
-                          Stack(
+                        
+                        // Content overlay
+                        Positioned.fill(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Container(
-                                width: 120,
-                                height: 120,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
+                              const SizedBox(height: 24),
+                              // User Name
+                              Text(
+                                userData.userName,
+                                style: const TextStyle(
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.bold,
                                   color: Colors.white,
-                                  border: Border.all(color: Colors.white, width: 4),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.2),
-                                      blurRadius: 10,
-                                      offset: const Offset(0, 4),
+                                  shadows: [
+                                    Shadow(
+                                      offset: Offset(0, 2),
+                                      blurRadius: 4,
+                                      color: Colors.black45,
                                     ),
                                   ],
                                 ),
-                                child: ClipOval(
-                                  child: userData.profilePic != null
-                                      ? Image.network(
-                                          ImageUrlHelper.getFullImageUrl(userData.profilePic),
-                                          width: 120,
-                                          height: 120,
-                                          fit: BoxFit.cover,
-                                          loadingBuilder: (context, child, loadingProgress) {
-                                            if (loadingProgress == null) return child;
-                                            return Center(
-                                              child: CircularProgressIndicator(
-                                                value: loadingProgress.expectedTotalBytes != null
-                                                    ? loadingProgress.cumulativeBytesLoaded /
-                                                        loadingProgress.expectedTotalBytes!
-                                                    : null,
-                                                color: Colors.white,
-                                              ),
-                                            );
-                                          },
-                                          errorBuilder: (context, error, stackTrace) =>
-                                              Container(
-                                                color: Colors.grey.shade200,
-                                                child: const Icon(Icons.person, size: 60, color: Colors.grey),
-                                              ),
-                                        )
-                                      : Container(
-                                          color: Colors.grey.shade200,
-                                          child: const Icon(Icons.person, size: 60, color: Colors.grey),
-                                        ),
-                                ),
                               ),
-                              Positioned(
-                                bottom: 0,
-                                right: 0,
-                                child: InkWell(
-                                  onTap: () async {
-                                    final imageFile = await ImagePickerHelper.showImageSourceDialogFile(context);
-                                    if (imageFile != null && mounted) {
-                                      viewModel.uploadProfilePicture(imageFile);
-                                    }
-                                  },
-                                  child: Container(
-                                    padding: const EdgeInsets.all(8),
-                                    decoration: BoxDecoration(
-                                      color: Theme.of(context).primaryColor,
-                                      shape: BoxShape.circle,
-                                      border: Border.all(color: Colors.white, width: 3),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withValues(alpha: 0.2),
-                                          blurRadius: 8,
-                                          offset: const Offset(0, 2),
-                                        ),
-                                      ],
+                              const SizedBox(height: 12),
+                              // Role Badge
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.25),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(color: Colors.white, width: 2),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.2),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 2),
                                     ),
-                                    child: const Icon(
-                                      Icons.edit,
-                                      color: Colors.white,
-                                      size: 20,
-                                    ),
+                                  ],
+                                ),
+                                child: Text(
+                                  UserRole.fromId(userData.roleId).displayName,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 14,
                                   ),
                                 ),
                               ),
+                              const SizedBox(height: 24),
                             ],
                           ),
-                          const SizedBox(height: 16),
-                          // User Name
-                          Text(
-                            userData.userName,
-                            style: const TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          // Role Badge
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: Colors.white),
-                            ),
-                            child: Text(
-                              UserRole.fromId(userData.roleId).displayName,
-                              style: const TextStyle(
+                        ),
+                        
+                        // Edit button
+                        Positioned(
+                          bottom: 16,
+                          right: 16,
+                          child: InkWell(
+                            onTap: () async {
+                              final imageFile = await ImagePickerHelper.showImageSourceDialogFile(context);
+                              if (imageFile != null && mounted) {
+                                viewModel.uploadProfilePicture(imageFile);
+                              }
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).primaryColor,
+                                shape: BoxShape.circle,
+                                border: Border.all(color: Colors.white, width: 3),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.3),
+                                    blurRadius: 12,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: const Icon(
+                                Icons.camera_alt,
                                 color: Colors.white,
-                                fontWeight: FontWeight.w500,
+                                size: 24,
                               ),
                             ),
                           ),
-                          const SizedBox(height: 24),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
 
                     const SizedBox(height: 16),

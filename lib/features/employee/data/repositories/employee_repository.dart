@@ -32,5 +32,19 @@ class EmployeeRepository {
     final apiResponse = CommonApiResponse.fromJson(response);
     return EmployeeModel.fromJson(apiResponse.data);
   }
+
+  Future<CommonApiResponse> deactivateEmployee(int employeeId) async {
+    final response = await _apiService.post('employee/deactivateEmployee', {
+      'employeeId': employeeId,
+    });
+    return CommonApiResponse.fromJson(response);
+  }
+
+  Future<CommonApiResponse> activateEmployee(int employeeId) async {
+    final response = await _apiService.post('employee/activateEmployee', {
+      'employeeId': employeeId,
+    });
+    return CommonApiResponse.fromJson(response);
+  }
 }
 

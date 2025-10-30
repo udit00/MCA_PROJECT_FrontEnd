@@ -10,6 +10,11 @@ class AttendanceRepository {
     return CommonApiResponse.fromJson(response);
   }
 
+  Future<CommonApiResponse> getAllAttendanceForUser(int userId) async {
+    final response = await _apiService.get('attendance/getAllAttendance?userId=$userId');
+    return CommonApiResponse.fromJson(response);
+  }
+
   Future<CommonApiResponse> punchIn(PunchInRequestModel request) async {
     final response = await _apiService.post('attendance/punchIn', request.toJson());
     return CommonApiResponse.fromJson(response);

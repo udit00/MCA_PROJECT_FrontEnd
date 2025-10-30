@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:zymm/common/enums/user_role.dart';
+import 'package:zymm/core/storage/storage_service.dart';
+import 'package:zymm/features/attendance/presentation/view_employee_attendance_screen.dart';
 import 'package:zymm/features/employee/presentation/viewmodel/employee_viewmodel.dart';
+
+import '../../data/models/employee_model.dart';
 
 class EmployeeDetailScreen extends StatefulWidget {
   final int employeeId;
@@ -15,12 +20,24 @@ class EmployeeDetailScreen extends StatefulWidget {
 }
 
 class _EmployeeDetailScreenState extends State<EmployeeDetailScreen> {
+  UserRole? _currentUserRole;
+
   @override
   void initState() {
     super.initState();
+    _loadUserRole();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<EmployeeViewModel>().getEmployeeById(widget.employeeId);
     });
+  }
+
+  Future<void> _loadUserRole() async {
+    final roleId = await StorageService.instance.getRoleId();
+    if (roleId != null) {
+      setState(() {
+        _currentUserRole = UserRole.fromId(roleId);
+      });
+    }
   }
 
   @override
@@ -95,7 +112,7 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen> {
                         ),
                         child: Center(
                           child: Text(
-                            'E${employee.employeeId}',
+                            employee.initials,
                             style: TextStyle(
                               fontSize: 32,
                               fontWeight: FontWeight.bold,
@@ -106,11 +123,19 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen> {
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        'Employee #${employee.employeeId}',
+                        employee.userName,
                         style: const TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Employee #${employee.employeeId}',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.white.withValues(alpha: 0.9),
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -120,13 +145,17 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen> {
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
+                          color: employee.isActive 
+                              ? Colors.white.withValues(alpha: 0.2)
+                              : Colors.red.withValues(alpha: 0.3),
                           borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: Colors.white),
+                          border: Border.all(
+                            color: employee.isActive ? Colors.white : Colors.red.shade300,
+                          ),
                         ),
-                        child: const Text(
-                          'Active',
-                          style: TextStyle(
+                        child: Text(
+                          employee.isActive ? 'Active' : 'Inactive',
+                          style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.w500,
                           ),
@@ -163,30 +192,41 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen> {
                       ),
                       const SizedBox(height: 12),
 
-                      // User ID
+                      // Name
                       _buildInfoCard(
                         icon: Icons.person,
-                        title: 'User ID',
-                        value: '#${employee.userId}',
+                        title: 'Name',
+                        value: employee.userName,
                         iconColor: Colors.purple,
                       ),
                       const SizedBox(height: 12),
 
-                      // Gym ID
+                      // Mobile
                       _buildInfoCard(
-                        icon: Icons.fitness_center,
-                        title: 'Gym ID',
-                        value: '#${employee.gymId}',
-                        iconColor: Colors.red,
+                        icon: Icons.phone,
+                        title: 'Mobile',
+                        value: employee.mobile,
+                        iconColor: Colors.green,
                       ),
                       const SizedBox(height: 12),
 
-                      // Created By
+                      // Email
+                      if (employee.email != null && employee.email!.isNotEmpty)
+                        _buildInfoCard(
+                          icon: Icons.email,
+                          title: 'Email',
+                          value: employee.email!,
+                          iconColor: Colors.orange,
+                        ),
+                      if (employee.email != null && employee.email!.isNotEmpty)
+                        const SizedBox(height: 12),
+
+                      // Gender
                       _buildInfoCard(
-                        icon: Icons.person_add,
-                        title: 'Created By',
-                        value: 'User #${employee.createdBy}',
-                        iconColor: Colors.orange,
+                        icon: Icons.wc,
+                        title: 'Gender',
+                        value: employee.gender,
+                        iconColor: Colors.pink,
                       ),
                       const SizedBox(height: 12),
 
@@ -195,7 +235,7 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen> {
                         icon: Icons.calendar_today,
                         title: 'Started Working',
                         value: employee.formattedStartDateTime,
-                        iconColor: Colors.green,
+                        iconColor: Colors.indigo,
                       ),
 
                       const SizedBox(height: 24),
@@ -217,28 +257,42 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen> {
                         subtitle: 'Check attendance records',
                         color: Colors.indigo,
                         onTap: () {
-                          // TODO: Navigate to attendance
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Coming soon!')),
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ViewEmployeeAttendanceScreen(
+                                userId: employee.userId,
+                                employeeName: employee.userName,
+                              ),
+                            ),
                           );
                         },
                       ),
                       const SizedBox(height: 12),
 
-                      // Deactivate Employee Button
-                      _buildActionButton(
-                        icon: Icons.block,
-                        title: 'Deactivate Employee',
-                        subtitle: 'Mark as inactive',
-                        color: Colors.red,
-                        isDanger: true,
-                        onTap: () {
-                          // TODO: Implement deactivate
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Coming soon!')),
-                          );
-                        },
-                      ),
+                      // Deactivate Employee Button - conditionally shown
+                      if (_shouldShowDeactivateButton(employee))
+                        _buildActionButton(
+                          icon: Icons.block,
+                          title: 'Deactivate Employee',
+                          subtitle: 'Mark as inactive',
+                          color: Colors.red,
+                          isDanger: true,
+                          onTap: () => _showDeactivateDialog(context, employee),
+                        ),
+
+                      // Activate Employee Button - conditionally shown for inactive employees
+                      if (_shouldShowActivateButton(employee)) ...[
+                        const SizedBox(height: 12),
+                        _buildActionButton(
+                          icon: Icons.check_circle,
+                          title: 'Activate Employee',
+                          subtitle: 'Mark as active',
+                          color: Colors.green,
+                          isDanger: false,
+                          onTap: () => _showActivateDialog(context, employee),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -384,6 +438,152 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  bool _shouldShowDeactivateButton(EmployeeModel employee) {
+    if (_currentUserRole == null) return false;
+    
+    // Don't show deactivate button if employee is already inactive
+    if (!employee.isActive) return false;
+    
+    final employeeRole = UserRole.fromId(employee.roleId);
+    
+    // Owner can deactivate anyone
+    if (_currentUserRole == UserRole.owner) {
+      return true;
+    }
+    
+    // Manager can deactivate employees but not other managers
+    if (_currentUserRole == UserRole.manager) {
+      return employeeRole != UserRole.manager;
+    }
+    
+    // Other roles cannot deactivate
+    return false;
+  }
+
+  bool _shouldShowActivateButton(EmployeeModel employee) {
+    if (_currentUserRole == null) return false;
+    
+    // Only show activate button if employee is inactive
+    if (employee.isActive) return false;
+    
+    final employeeRole = UserRole.fromId(employee.roleId);
+    
+    // Owner can activate anyone
+    if (_currentUserRole == UserRole.owner) {
+      return true;
+    }
+    
+    // Manager can activate employees but not other managers
+    if (_currentUserRole == UserRole.manager) {
+      return employeeRole != UserRole.manager;
+    }
+    
+    // Other roles cannot activate
+    return false;
+  }
+
+  void _showDeactivateDialog(BuildContext context, EmployeeModel employee) {
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text('Deactivate Employee'),
+          content: Text(
+            'Are you sure you want to deactivate ${employee.userName}? They will no longer be able to access the system.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.of(dialogContext).pop();
+                final viewModel = context.read<EmployeeViewModel>();
+                final success = await viewModel.deactivateEmployee(employee.employeeId);
+                
+                if (success && mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('${employee.userName} has been deactivated'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                  // Go back to previous screen
+                  Navigator.of(context).pop();
+                } else if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        viewModel.errorMessage ?? 'Failed to deactivate employee',
+                      ),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+              ),
+              child: const Text('Deactivate', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showActivateDialog(BuildContext context, EmployeeModel employee) {
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text('Activate Employee'),
+          content: Text(
+            'Are you sure you want to activate ${employee.userName}? They will be able to access the system again.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.of(dialogContext).pop();
+                final viewModel = context.read<EmployeeViewModel>();
+                final success = await viewModel.activateEmployee(employee.employeeId);
+                
+                if (success && mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('${employee.userName} has been activated'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                  // Go back to previous screen
+                  Navigator.of(context).pop();
+                } else if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        viewModel.errorMessage ?? 'Failed to activate employee',
+                      ),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+              ),
+              child: const Text('Activate', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
     );
   }
 }

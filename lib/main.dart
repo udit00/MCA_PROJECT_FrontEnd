@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:zymm/features/home/presentation/home_screen.dart';
 import 'package:zymm/features/onboarding/presentation/onboarding_screen.dart';
 import 'package:zymm/utils/app_info.dart';
 import 'package:zymm/utils/screen_dimensions.dart';
@@ -26,6 +27,7 @@ class MyApp extends StatelessWidget {
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
           useMaterial3: true,
         ),
+        navigatorObservers: [homeScreenRouteObserver],
         home: const OnboardingScreen(),
       ),
     );

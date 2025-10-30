@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:zymm/features/auth/presentation/login_screen.dart';
 import 'package:zymm/features/home/presentation/viewmodel/greeting_viewmodel.dart';
 import 'package:zymm/features/home/presentation/home_screen.dart';
 import 'package:zymm/features/notifications/presentation/viewmodel/notification_viewmodel.dart';
@@ -38,6 +39,20 @@ class _GreetingScreenState extends State<GreetingScreen> {
               context,
               MaterialPageRoute(
                 builder: (context) => HomeScreen(userRole: greetingVM.userRole),
+              ),
+              (route) => false,
+            );
+          });
+        }
+
+        if (greetingVM.state == GreetingState.error) {
+          WidgetsBinding.instance.addPostFrameCallback((_) async {
+            await Future.delayed(const Duration(seconds: 3)); // Show error for 3 seconds
+            if (!mounted) return; // Safety check
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const LoginScreen(),
               ),
               (route) => false,
             );
@@ -164,11 +179,20 @@ class _GreetingScreenState extends State<GreetingScreen> {
                               ),
                               const SizedBox(height: 12),
                               Text(
-                                greetingVM.errorMessage ?? 'An error occurred.',
+                                'Session expired or invalid.\nLogging you out...',
                                 textAlign: TextAlign.center,
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 16,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                greetingVM.errorMessage ?? 'An error occurred.',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.8),
+                                  fontSize: 14,
                                 ),
                               ),
                             ],

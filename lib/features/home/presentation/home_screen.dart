@@ -22,6 +22,9 @@ import 'package:zymm/utils/image_url_helper.dart';
 
 import '../../gym/presentation/viewmodel/gym_viewmodel.dart';
 
+// Global RouteObserver for HomeScreen
+final RouteObserver<PageRoute> homeScreenRouteObserver = RouteObserver<PageRoute>();
+
 class HomeScreen extends StatefulWidget {
   final UserRole userRole;
 
@@ -31,11 +34,10 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with RouteAware {
   final UserRepository _userRepository = UserRepository();
   SelfDataModel? _userData;
   bool _isLoadingUserData = false;
-  bool _hasInitialized = false;
 
   @override
   void initState() {
@@ -46,10 +48,31 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Only fetch on first build
-    if (!_hasInitialized) {
-      _hasInitialized = true;
+    // Subscribe to route changes
+    final route = ModalRoute.of(context);
+    if (route is PageRoute) {
+      homeScreenRouteObserver.subscribe(this, route);
     }
+  }
+
+  @override
+  void dispose() {
+    homeScreenRouteObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  @override
+  void didPopNext() {
+    // Called when the top route has been popped off, and the current route shows up.
+    // This means we're coming back to this screen
+    developer.log('🔄 HomeScreen: didPopNext - Refetching data');
+    _fetchData();
+  }
+
+  @override
+  void didPushNext() {
+    // Called when a new route has been pushed, and the current route is no longer visible.
+    developer.log('➡️ HomeScreen: didPushNext - Navigating away');
   }
 
   Future<void> _fetchData() async {
@@ -115,19 +138,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     color: Colors.grey.shade300,
                     border: Border.all(color: Colors.white, width: 2),
                   ),
-                  child: ClipOval(
-                    child: _userData?.profilePic != null
-                        ? Image.network(
-                            ImageUrlHelper.getFullImageUrl(_userData!.profilePic),
-                            width: 36,
-                            height: 36,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Icon(Icons.person, size: 20, color: Colors.grey.shade600);
-                            },
-                          )
-                        : Icon(Icons.person, size: 20, color: Colors.grey.shade600),
-                  ),
+                  child: Icon(Icons.person, size: 20, color: Colors.grey.shade600)
                 ),
               ),
             ],
@@ -186,34 +197,38 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
         body: SafeArea(
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Role Badge
-                  _buildRoleBadge(context),
-                  const SizedBox(height: 24),
-                  
-                  // Welcome Card
-                  _buildWelcomeCard(context),
-                  const SizedBox(height: 32),
-                  
-                  // Section Title
-                  Text(
-                    'Quick Actions',
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey[800],
+          child: RefreshIndicator(
+            onRefresh: _fetchData,
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Role Badge
+                    _buildRoleBadge(context),
+                    const SizedBox(height: 24),
+                    
+                    // Welcome Card
+                    _buildWelcomeCard(context),
+                    const SizedBox(height: 32),
+                    
+                    // Section Title
+                    Text(
+                      'Quick Actions',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey[800],
+                      ),
                     ),
-                  ),
                   const SizedBox(height: 16),
                   
-                  // Role-based Quick Actions
-                  _buildQuickActions(context),
-                ],
+                    // Role-based Quick Actions
+                    _buildQuickActions(context),
+                  ],
+                ),
               ),
             ),
           ),

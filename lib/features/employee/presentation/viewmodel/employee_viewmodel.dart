@@ -51,6 +51,54 @@ class EmployeeViewModel extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  Future<bool> deactivateEmployee(int employeeId) async {
+    _state = EmployeeViewState.loading;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final response = await _repository.deactivateEmployee(employeeId);
+      if (response.hasError) {
+        _state = EmployeeViewState.error;
+        _errorMessage = response.error ?? 'Failed to deactivate employee';
+        notifyListeners();
+        return false;
+      }
+      _state = EmployeeViewState.success;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _state = EmployeeViewState.error;
+      _errorMessage = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> activateEmployee(int employeeId) async {
+    _state = EmployeeViewState.loading;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final response = await _repository.activateEmployee(employeeId);
+      if (response.hasError) {
+        _state = EmployeeViewState.error;
+        _errorMessage = response.error ?? 'Failed to activate employee';
+        notifyListeners();
+        return false;
+      }
+      _state = EmployeeViewState.success;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _state = EmployeeViewState.error;
+      _errorMessage = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
 }
 
 

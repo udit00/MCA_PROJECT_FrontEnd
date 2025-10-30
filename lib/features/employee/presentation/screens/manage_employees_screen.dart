@@ -164,11 +164,17 @@ class EmployeeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDeactivated = !employee.isActive;
+    
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 2,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: isDeactivated ? Colors.red : Colors.transparent,
+          width: 2,
+        ),
       ),
       child: InkWell(
         onTap: onTap,
@@ -182,16 +188,20 @@ class EmployeeCard extends StatelessWidget {
                 width: 56,
                 height: 56,
                 decoration: BoxDecoration(
-                  color: Colors.blue.shade100,
+                  color: isDeactivated 
+                      ? Colors.red.shade100 
+                      : Colors.blue.shade100,
                   shape: BoxShape.circle,
                 ),
                 child: Center(
                   child: Text(
-                    'E${employee.employeeId}',
+                    employee.initials,
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: Colors.blue.shade700,
+                      color: isDeactivated 
+                          ? Colors.red.shade700 
+                          : Colors.blue.shade700,
                     ),
                   ),
                 ),
@@ -203,24 +213,51 @@ class EmployeeCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Employee #${employee.employeeId}',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            employee.userName,
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: isDeactivated ? Colors.grey : Colors.black,
+                            ),
+                          ),
+                        ),
+                        if (isDeactivated)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.red.shade100,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.red, width: 1),
+                            ),
+                            child: Text(
+                              'INACTIVE',
+                              style: TextStyle(
+                                color: Colors.red.shade700,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
                     const SizedBox(height: 4),
                     Row(
                       children: [
                         Icon(
-                          Icons.person,
+                          Icons.phone,
                           size: 16,
                           color: Colors.grey.shade600,
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          'User ID: ${employee.userId}',
+                          employee.mobile,
                           style: TextStyle(
                             fontSize: 13,
                             color: Colors.grey.shade600,
@@ -232,16 +269,19 @@ class EmployeeCard extends StatelessWidget {
                     Row(
                       children: [
                         Icon(
-                          Icons.calendar_today,
+                          Icons.badge,
                           size: 16,
                           color: Colors.grey.shade600,
                         ),
                         const SizedBox(width: 4),
-                        Text(
-                          'Started: ${employee.formattedStartDate}',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Colors.grey.shade600,
+                        Expanded(
+                          child: Text(
+                            'Employee #${employee.employeeId} • ${employee.gender}',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.grey.shade600,
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ],
@@ -249,6 +289,8 @@ class EmployeeCard extends StatelessWidget {
                   ],
                 ),
               ),
+
+              const SizedBox(width: 8),
 
               // Arrow Icon
               Icon(
