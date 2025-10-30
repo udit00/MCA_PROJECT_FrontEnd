@@ -74,5 +74,32 @@ class PlanModel {
       createdAt: DateTime.now(),
     );
   }
+
+  /// Copy plan with modified fields
+  PlanModel copyWith({
+    int? planId,
+    String? planBanner,
+    String? planName,
+    String? planDesc,
+    int? planPrice,
+    int? planDuration,
+    int? gymId,
+    bool? isActive,
+    int? createdBy,
+    DateTime? createdAt,
+  }) {
+    return PlanModel(
+      planId: planId ?? this.planId,
+      planBanner: planBanner ?? this.planBanner,
+      planName: planName ?? this.planName,
+      planDesc: planDesc ?? this.planDesc,
+      planPrice: planPrice ?? this.planPrice,
+      planDuration: planDuration ?? this.planDuration,
+      gymId: gymId ?? this.gymId,
+      isActive: isActive ?? this.isActive,
+      createdBy: createdBy ?? this.createdBy,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
 }
 

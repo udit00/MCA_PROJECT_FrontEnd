@@ -337,6 +337,111 @@ class MembershipViewModel extends ChangeNotifier {
   /// Check if user has any pending request
   bool get hasPendingRequest => _pendingPlanRequest != null;
 
+  /// Get all plans for management (owners/managers) - includes inactive plans
+  Future<void> getAllPlansForManagement() async {
+    _state = MembershipViewState.loading;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final response = await _repository.getAllPlansForManagement();
+
+      if (response.hasError) {
+        final errorMsg = response.error?.toLowerCase() ?? '';
+        if (errorMsg.contains('no') && (errorMsg.contains('data') || errorMsg.contains('plan') || errorMsg.contains('found'))) {
+          _plans = [];
+          _state = MembershipViewState.success;
+        } else {
+          _state = MembershipViewState.error;
+          _errorMessage = response.error ?? 'Failed to fetch plans';
+        }
+      } else {
+        if (response.data == null) {
+          _plans = [];
+        } else if (response.data is List) {
+          final List<dynamic> data = response.data as List<dynamic>;
+          _plans = data.map((json) => PlanModel.fromJson(json)).toList();
+        } else {
+          _plans = [];
+        }
+        _state = MembershipViewState.success;
+      }
+    } catch (e) {
+      _state = MembershipViewState.error;
+      _errorMessage = 'Error: ${e.toString()}';
+    } finally {
+      notifyListeners();
+    }
+  }
+
+  /// Deactivate a plan (owners/managers only)
+  Future<bool> deactivatePlan(int planId) async {
+    _state = MembershipViewState.submitting;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final response = await _repository.deactivatePlan(planId);
+
+      if (response.hasError) {
+        _state = MembershipViewState.error;
+        _errorMessage = response.error ?? 'Failed to deactivate plan';
+        notifyListeners();
+        return false;
+      } else {
+        // Update local plan status
+        final index = _plans.indexWhere((p) => p.planId == planId);
+        if (index != -1) {
+          // Create a new list with the updated plan
+          final updatedPlan = _plans[index].copyWith(isActive: false);
+          _plans = List.from(_plans)..[index] = updatedPlan;
+        }
+        _state = MembershipViewState.success;
+        notifyListeners();
+        return true;
+      }
+    } catch (e) {
+      _state = MembershipViewState.error;
+      _errorMessage = 'Error: ${e.toString()}';
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// Activate a plan (owners/managers only)
+  Future<bool> activatePlan(int planId) async {
+    _state = MembershipViewState.submitting;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final response = await _repository.activatePlan(planId);
+
+      if (response.hasError) {
+        _state = MembershipViewState.error;
+        _errorMessage = response.error ?? 'Failed to activate plan';
+        notifyListeners();
+        return false;
+      } else {
+        // Update local plan status
+        final index = _plans.indexWhere((p) => p.planId == planId);
+        if (index != -1) {
+          // Create a new list with the updated plan
+          final updatedPlan = _plans[index].copyWith(isActive: true);
+          _plans = List.from(_plans)..[index] = updatedPlan;
+        }
+        _state = MembershipViewState.success;
+        notifyListeners();
+        return true;
+      }
+    } catch (e) {
+      _state = MembershipViewState.error;
+      _errorMessage = 'Error: ${e.toString()}';
+      notifyListeners();
+      return false;
+    }
+  }
+
   /// Reset state
   void resetState() {
     _state = MembershipViewState.idle;

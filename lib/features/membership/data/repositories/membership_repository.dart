@@ -55,5 +55,28 @@ class MembershipRepository {
     final response = await _apiService.post('membership/cancelMembershipRequest', request.toJson());
     return CommonApiResponse.fromJson(response);
   }
+
+  /// Get all plans for management (owners/managers) - includes inactive plans
+  /// Uses JWT to get gym ID automatically
+  Future<CommonApiResponse> getAllPlansForManagement() async {
+    final response = await _apiService.get('membership/getAllPlansForManagement');
+    return CommonApiResponse.fromJson(response);
+  }
+
+  /// Deactivate a plan (owners/managers only)
+  Future<CommonApiResponse> deactivatePlan(int planId) async {
+    final response = await _apiService.post('membership/deactivatePlan', {
+      'planId': planId,
+    });
+    return CommonApiResponse.fromJson(response);
+  }
+
+  /// Activate a plan (owners/managers only)
+  Future<CommonApiResponse> activatePlan(int planId) async {
+    final response = await _apiService.post('membership/activatePlan', {
+      'planId': planId,
+    });
+    return CommonApiResponse.fromJson(response);
+  }
 }
 

@@ -584,7 +584,28 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
             'title': 'Manage Plans',
             'subtitle': 'Membership plans',
             'color': Colors.teal,
-            'onTap': () {}, // TODO: Navigate to plans
+            'onTap': () async {
+              final gymId = await StorageService.instance.getGymId();
+              if (gymId != null && context.mounted) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        ChangeNotifierProvider(
+                          create: (_) => MembershipViewModel(),
+                          child: ViewAllPlansScreen(gymId: gymId),
+                        ),
+                  ),
+                );
+              } else if (context.mounted){
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Gym ID not found. Please try again.'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            },
           },
           {
             'icon': Icons.attach_money,
